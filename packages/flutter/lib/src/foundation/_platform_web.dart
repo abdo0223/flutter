@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:html' as html;
 import 'platform.dart' as platform;
 
 /// The dart:html implementation of [platform.defaultTargetPlatform].
@@ -17,7 +16,7 @@ platform.TargetPlatform get defaultTargetPlatform {
 }
 
 platform.TargetPlatform _browserPlatform() {
-  final String navigatorPlatform = html.window.navigator.platform?.toLowerCase() ?? '';
+  final String navigatorPlatform =
   if (navigatorPlatform.startsWith('mac')) {
     return platform.TargetPlatform.macOS;
   }
