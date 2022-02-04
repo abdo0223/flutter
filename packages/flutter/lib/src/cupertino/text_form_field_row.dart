@@ -58,7 +58,7 @@ import 'text_field.dart';
 ///
 /// ```dart
 /// CupertinoTextFormFieldRow(
-///   prefix: Text('Username'),
+///   prefix: const Text('Username'),
 ///   onSaved: (String? value) {
 ///     // This optional block of code can be used to run
 ///     // code when the user saves the form.
@@ -70,43 +70,11 @@ import 'text_field.dart';
 /// ```
 /// {@end-tool}
 ///
-/// {@tool dartpad --template=stateful_widget_material}
+/// {@tool dartpad}
 /// This example shows how to move the focus to the next field when the user
 /// presses the SPACE key.
 ///
-/// ```dart imports
-/// import 'package:flutter/cupertino.dart';
-/// ```
-///
-/// ```dart
-/// Widget build(BuildContext context) {
-///   return CupertinoPageScaffold(
-///     child: Center(
-///       child: Form(
-///         autovalidateMode: AutovalidateMode.always,
-///         onChanged: () {
-///           Form.of(primaryFocus!.context!)?.save();
-///         },
-///         child: CupertinoFormSection.insetGrouped(
-///           header: Text('SECTION 1'),
-///           children: List<Widget>.generate(5, (int index) {
-///             return CupertinoTextFormFieldRow(
-///               prefix: Text('Enter text'),
-///               placeholder: 'Enter text',
-///               validator: (value) {
-///                 if (value == null || value.isEmpty) {
-///                   return 'Please enter a value';
-///                 }
-///                 return null;
-///               },
-///             );
-///          }),
-///         ),
-///       ),
-///     ),
-///   );
-/// }
-/// ```
+/// ** See code in examples/api/lib/cupertino/text_form_field_row/cupertino_text_form_field_row.1.dart **
 /// {@end-tool}
 class CupertinoTextFormFieldRow extends FormField<String> {
   /// Creates a [CupertinoFormRow] containing a [FormField] that wraps
@@ -143,6 +111,7 @@ class CupertinoTextFormFieldRow extends FormField<String> {
     TextInputAction? textInputAction,
     TextStyle? style,
     StrutStyle? strutStyle,
+    TextDirection? textDirection,
     TextAlign textAlign = TextAlign.start,
     TextAlignVertical? textAlignVertical,
     bool autofocus = false,
@@ -202,8 +171,7 @@ class CupertinoTextFormFieldRow extends FormField<String> {
           !expands || (maxLines == null && minLines == null),
           'minLines and maxLines must be null when expands is true.',
         ),
-        assert(!obscureText || maxLines == 1,
-            'Obscured fields cannot be multiline.'),
+        assert(!obscureText || maxLines == 1, 'Obscured fields cannot be multiline.'),
         assert(maxLength == null || maxLength > 0),
         assert(enableInteractiveSelection != null),
         super(
@@ -238,6 +206,7 @@ class CupertinoTextFormFieldRow extends FormField<String> {
                 textAlign: textAlign,
                 textAlignVertical: textAlignVertical,
                 textCapitalization: textCapitalization,
+                textDirection: textDirection,
                 autofocus: autofocus,
                 toolbarOptions: toolbarOptions,
                 readOnly: readOnly,
@@ -298,8 +267,7 @@ class CupertinoTextFormFieldRow extends FormField<String> {
   final TextEditingController? controller;
 
   @override
-  _CupertinoTextFormFieldRowState createState() =>
-      _CupertinoTextFormFieldRowState();
+  FormFieldState<String> createState() => _CupertinoTextFormFieldRowState();
 }
 
 class _CupertinoTextFormFieldRowState extends FormFieldState<String> {

@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 
 import 'actions.dart';
 import 'basic.dart';
-import 'editable_text.dart';
 import 'focus_manager.dart';
 import 'focus_scope.dart';
 import 'framework.dart';
@@ -113,7 +112,8 @@ enum TraversalDirection {
 ///    focus traversal in a direction.
 @immutable
 abstract class FocusTraversalPolicy with Diagnosticable {
-  /// A const constructor so subclasses can be const.
+  /// Abstract const constructor. This constructor enables subclasses to provide
+  /// const constructors so that they can be used in const expressions.
   const FocusTraversalPolicy();
 
   /// Returns the node that should receive focus if focus is traversing
@@ -313,7 +313,6 @@ abstract class FocusTraversalPolicy with Diagnosticable {
     }
 
     // Sort the member lists using the individual policy sorts.
-    final Set<FocusNode?> groupKeys = groups.keys.toSet();
     for (final FocusNode? key in groups.keys) {
       final List<FocusNode> sortedMembers = groups[key]!.policy.sortDescendants(groups[key]!.members, currentNode).toList();
       groups[key]!.members.clear();
@@ -325,7 +324,7 @@ abstract class FocusTraversalPolicy with Diagnosticable {
     final List<FocusNode> sortedDescendants = <FocusNode>[];
     void visitGroups(_FocusTraversalGroupInfo info) {
       for (final FocusNode node in info.members) {
-        if (groupKeys.contains(node)) {
+        if (groups.containsKey(node)) {
           // This is a policy group focus node. Replace it with the members of
           // the corresponding policy group.
           visitGroups(groups[node]!);
@@ -335,10 +334,25 @@ abstract class FocusTraversalPolicy with Diagnosticable {
       }
     }
 
-    visitGroups(groups[scopeGroupMarker?.focusNode]!);
+    // Visit the children of the scope, if any.
+    if (groups.isNotEmpty && groups.containsKey(scopeGroupMarker?.focusNode)) {
+      visitGroups(groups[scopeGroupMarker?.focusNode]!);
+    }
+
+    // Remove the FocusTraversalGroup nodes themselves, which aren't focusable.
+    // They were left in above because they were needed to find their members
+    // during sorting.
+    sortedDescendants.removeWhere((FocusNode node) {
+      return !node.canRequestFocus || node.skipTraversal;
+    });
+
+    // Sanity check to make sure that the algorithm above doesn't diverge from
+    // the one in FocusScopeNode.traversalDescendants in terms of which nodes it
+    // finds.
     assert(
       sortedDescendants.length <= scope.traversalDescendants.length && sortedDescendants.toSet().difference(scope.traversalDescendants.toSet()).isEmpty,
-      'sorted descendants contains more nodes than it should: (${sortedDescendants.toSet().difference(scope.traversalDescendants.toSet())})'
+      'Sorted descendants contains different nodes than FocusScopeNode.traversalDescendants would. '
+      'These are the different nodes: ${sortedDescendants.toSet().difference(scope.traversalDescendants.toSet())}',
     );
     return sortedDescendants;
   }
@@ -1147,9 +1161,10 @@ abstract class FocusOrder with Diagnosticable implements Comparable<FocusOrder> 
   @nonVirtual
   int compareTo(FocusOrder other) {
     assert(
-        runtimeType == other.runtimeType,
-        "The sorting algorithm must not compare incomparable keys, since they don't "
-        'know how to order themselves relative to each other. Comparing $this with $other');
+      runtimeType == other.runtimeType,
+      "The sorting algorithm must not compare incomparable keys, since they don't "
+      'know how to order themselves relative to each other. Comparing $this with $other',
+    );
     return doCompare(other);
   }
 
@@ -1177,8 +1192,7 @@ abstract class FocusOrder with Diagnosticable implements Comparable<FocusOrder> 
 ///  * [FocusTraversalOrder], a widget that assigns an order to a widget subtree
 ///    for the [OrderedTraversalPolicy] to use.
 class NumericFocusOrder extends FocusOrder {
-  /// Const constructor. This constructor enables subclasses to provide
-  /// const constructors so that they can be used in const expressions.
+  /// Creates an object that describes a focus traversal order numerically.
   const NumericFocusOrder(this.order) : assert(order != null);
 
   /// The numerical order to assign to the widget subtree using
@@ -1206,7 +1220,7 @@ class NumericFocusOrder extends FocusOrder {
 /// traversed with the keyboard.
 ///
 /// This sorts strings using Dart's default string comparison, which is not
-/// locale specific.
+/// locale-specific.
 ///
 /// {@macro flutter.widgets.FocusOrder.comparable}
 ///
@@ -1215,8 +1229,7 @@ class NumericFocusOrder extends FocusOrder {
 ///  * [FocusTraversalOrder], a widget that assigns an order to a widget subtree
 ///    for the [OrderedTraversalPolicy] to use.
 class LexicalFocusOrder extends FocusOrder {
-  /// Const constructor. This constructor enables subclasses to provide
-  /// const constructors so that they can be used in const expressions.
+  /// Creates an object that describes a focus traversal order lexically.
   const LexicalFocusOrder(this.order) : assert(order != null);
 
   /// The String that defines the lexical order to assign to the widget subtree
@@ -1253,75 +1266,12 @@ class _OrderedFocusInfo {
 ///
 /// {@macro flutter.widgets.FocusOrder.comparable}
 ///
-/// {@tool dartpad --template=stateless_widget_scaffold_center}
+/// {@tool dartpad}
 /// This sample shows how to assign a traversal order to a widget. In the
 /// example, the focus order goes from bottom right (the "One" button) to top
 /// left (the "Six" button).
 ///
-/// ```dart preamble
-/// class DemoButton extends StatelessWidget {
-///   const DemoButton({
-///     required this.name,
-///     this.autofocus = false,
-///     required this.order,
-///   });
-///
-///   final String name;
-///   final bool autofocus;
-///   final double order;
-///
-///   void _handleOnPressed() {
-///     print('Button $name pressed.');
-///     debugDumpFocusTree();
-///   }
-///
-///   @override
-///   Widget build(BuildContext context) {
-///     return FocusTraversalOrder(
-///       order: NumericFocusOrder(order),
-///       child: TextButton(
-///         autofocus: autofocus,
-///         onPressed: () => _handleOnPressed(),
-///         child: Text(name),
-///       ),
-///     );
-///   }
-/// }
-/// ```
-///
-/// ```dart
-/// Widget build(BuildContext context) {
-///   return FocusTraversalGroup(
-///     policy: OrderedTraversalPolicy(),
-///     child: Column(
-///       mainAxisAlignment: MainAxisAlignment.center,
-///       children: <Widget>[
-///         Row(
-///           mainAxisAlignment: MainAxisAlignment.center,
-///           children: const <Widget>[
-///             DemoButton(name: 'Six', order: 6),
-///           ],
-///         ),
-///         Row(
-///           mainAxisAlignment: MainAxisAlignment.center,
-///           children: const <Widget>[
-///             DemoButton(name: 'Five', order: 5),
-///             DemoButton(name: 'Four', order: 4),
-///           ],
-///         ),
-///         Row(
-///           mainAxisAlignment: MainAxisAlignment.center,
-///           children: const <Widget>[
-///             DemoButton(name: 'Three', order: 3),
-///             DemoButton(name: 'Two', order: 2),
-///             DemoButton(name: 'One', order: 1, autofocus: true),
-///           ],
-///         ),
-///       ],
-///     ),
-///   );
-/// }
-/// ```
+/// ** See code in examples/api/lib/widgets/focus_traversal/ordered_traversal_policy.0.dart **
 /// {@end-tool}
 ///
 /// See also:
@@ -1393,7 +1343,8 @@ class OrderedTraversalPolicy extends FocusTraversalPolicy with DirectionalFocusT
 /// The order for a widget is determined by the [FocusOrder] returned by
 /// [FocusTraversalOrder.of] for a particular context.
 class FocusTraversalOrder extends InheritedWidget {
-  /// A const constructor so that subclasses can be const.
+  /// Creates an inherited widget used to describe the focus order of
+  /// the [child] subtree.
   const FocusTraversalOrder({Key? key, required this.order, required Widget child}) : super(key: key, child: child);
 
   /// The order for the widget descendants of this [FocusTraversalOrder].
@@ -1410,7 +1361,7 @@ class FocusTraversalOrder extends InheritedWidget {
   static FocusOrder of(BuildContext context) {
     assert(context != null);
     final FocusTraversalOrder? marker = context.getElementForInheritedWidgetOfExactType<FocusTraversalOrder>()?.widget as FocusTraversalOrder?;
-    assert((){
+    assert(() {
       if (marker == null) {
         throw FlutterError(
           'FocusTraversalOrder.of() was called with a context that '
@@ -1467,7 +1418,7 @@ class FocusTraversalOrder extends InheritedWidget {
 /// To prevent the members of the group from being focused, set the
 /// [descendantsAreFocusable] attribute to false.
 ///
-/// {@tool dartpad --template=stateless_widget_material}
+/// {@tool dartpad}
 /// This sample shows three rows of buttons, each grouped by a
 /// [FocusTraversalGroup], each with different traversal order policies. Use tab
 /// traversal to see the order they are traversed in.  The first row follows a
@@ -1475,165 +1426,7 @@ class FocusTraversalOrder extends InheritedWidget {
 /// right to left), and the third ignores the numerical order assigned to it and
 /// traverses in widget order.
 ///
-/// ```dart preamble
-/// /// A button wrapper that adds either a numerical or lexical order, depending on
-/// /// the type of T.
-/// class OrderedButton<T> extends StatefulWidget {
-///   const OrderedButton({
-///     required this.name,
-///     this.canRequestFocus = true,
-///     this.autofocus = false,
-///     required this.order,
-///   });
-///
-///   final String name;
-///   final bool canRequestFocus;
-///   final bool autofocus;
-///   final T order;
-///
-///   @override
-///   _OrderedButtonState createState() => _OrderedButtonState();
-/// }
-///
-/// class _OrderedButtonState<T> extends State<OrderedButton<T>> {
-///   late FocusNode focusNode;
-///
-///   @override
-///   void initState() {
-///     super.initState();
-///     focusNode = FocusNode(
-///       debugLabel: widget.name,
-///       canRequestFocus: widget.canRequestFocus,
-///     );
-///   }
-///
-///   @override
-///   void dispose() {
-///     focusNode.dispose();
-///     super.dispose();
-///   }
-///
-///   @override
-///   void didUpdateWidget(OrderedButton<T> oldWidget) {
-///     super.didUpdateWidget(oldWidget);
-///     focusNode.canRequestFocus = widget.canRequestFocus;
-///   }
-///
-///   void _handleOnPressed() {
-///     focusNode.requestFocus();
-///     print('Button ${widget.name} pressed.');
-///     debugDumpFocusTree();
-///   }
-///
-///   @override
-///   Widget build(BuildContext context) {
-///     FocusOrder order;
-///     if (widget.order is num) {
-///       order = NumericFocusOrder((widget.order as num).toDouble());
-///     } else {
-///       order = LexicalFocusOrder(widget.order.toString());
-///     }
-///
-///     Color? overlayColor(Set<MaterialState> states) {
-///       if (states.contains(MaterialState.focused)) {
-///         return Colors.red;
-///       }
-///       if (states.contains(MaterialState.hovered)) {
-///         return Colors.blue;
-///       }
-///       return null;  // defer to the default overlayColor
-///     }
-///
-///     Color? foregroundColor(Set<MaterialState> states) {
-///       if (states.contains(MaterialState.focused) || states.contains(MaterialState.hovered)) {
-///         return Colors.white;
-///       }
-///       return null;  // defer to the default foregroundColor
-///     }
-///
-///     return FocusTraversalOrder(
-///       order: order,
-///       child: Padding(
-///         padding: const EdgeInsets.all(8.0),
-///         child: OutlinedButton(
-///           focusNode: focusNode,
-///           autofocus: widget.autofocus,
-///           style: ButtonStyle(
-///             overlayColor: MaterialStateProperty.resolveWith<Color?>(overlayColor),
-///             foregroundColor: MaterialStateProperty.resolveWith<Color?>(foregroundColor),
-///           ),
-///           onPressed: () => _handleOnPressed(),
-///           child: Text(widget.name),
-///         ),
-///       ),
-///     );
-///   }
-/// }
-/// ```
-///
-/// ```dart
-/// Widget build(BuildContext context) {
-///   return Container(
-///     color: Colors.white,
-///     child: FocusTraversalGroup(
-///       policy: OrderedTraversalPolicy(),
-///       child: Column(
-///         mainAxisAlignment: MainAxisAlignment.center,
-///         children: <Widget>[
-///           // A group that is ordered with a numerical order, from left to right.
-///           FocusTraversalGroup(
-///             policy: OrderedTraversalPolicy(),
-///             child: Row(
-///               mainAxisAlignment: MainAxisAlignment.center,
-///               children: List<Widget>.generate(3, (int index) {
-///                 return OrderedButton<num>(
-///                   name: 'num: $index',
-///                   // TRY THIS: change this to "3 - index" and see how the order changes.
-///                   order: index,
-///                 );
-///               }),
-///             ),
-///           ),
-///           // A group that is ordered with a lexical order, from right to left.
-///           FocusTraversalGroup(
-///             policy: OrderedTraversalPolicy(),
-///             child: Row(
-///               mainAxisAlignment: MainAxisAlignment.center,
-///               children: List<Widget>.generate(3, (int index) {
-///                 // Order as "C" "B", "A".
-///                 String order =
-///                     String.fromCharCode('A'.codeUnitAt(0) + (2 - index));
-///                 return OrderedButton<String>(
-///                   name: 'String: $order',
-///                   order: order,
-///                 );
-///               }),
-///             ),
-///           ),
-///           // A group that orders in widget order, regardless of what the order is set to.
-///           FocusTraversalGroup(
-///             // Note that because this is NOT an OrderedTraversalPolicy, the
-///             // assigned order of these OrderedButtons is ignored, and they
-///             // are traversed in widget order. TRY THIS: change this to
-///             // "OrderedTraversalPolicy()" and see that it now follows the
-///             // numeric order set on them instead of the widget order.
-///             policy: WidgetOrderTraversalPolicy(),
-///             child: Row(
-///               mainAxisAlignment: MainAxisAlignment.center,
-///               children: List<Widget>.generate(3, (int index) {
-///                 return OrderedButton<num>(
-///                   name: 'ignored num: ${3 - index}',
-///                   order: 3 - index,
-///                 );
-///               }),
-///             ),
-///           ),
-///         ],
-///       ),
-///     ),
-///   );
-/// }
-/// ```
+/// ** See code in examples/api/lib/widgets/focus_traversal/focus_traversal_group.0.dart **
 /// {@end-tool}
 ///
 /// See also:
@@ -1738,7 +1531,7 @@ class FocusTraversalGroup extends StatefulWidget {
   }
 
   @override
-  _FocusTraversalGroupState createState() => _FocusTraversalGroupState();
+  State<FocusTraversalGroup> createState() => _FocusTraversalGroupState();
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
@@ -1806,8 +1599,9 @@ class _FocusTraversalGroupMarker extends InheritedWidget {
 /// An intent for use with the [RequestFocusAction], which supplies the
 /// [FocusNode] that should be focused.
 class RequestFocusIntent extends Intent {
-  /// A const constructor for a [RequestFocusIntent], so that subclasses may be
-  /// const.
+  /// Creates an intent used with [RequestFocusAction].
+  ///
+  /// The argument must not be null.
   const RequestFocusIntent(this.focusNode)
       : assert(focusNode != null);
 
@@ -1851,7 +1645,7 @@ class RequestFocusAction extends Action<RequestFocusIntent> {
 ///
 /// See [FocusTraversalPolicy] for more information about focus traversal.
 class NextFocusIntent extends Intent {
-  /// Creates a const [NextFocusIntent] so subclasses can be const.
+  /// Creates an intent that is used with [NextFocusAction].
   const NextFocusIntent();
 }
 
@@ -1874,7 +1668,7 @@ class NextFocusAction extends Action<NextFocusIntent> {
 ///
 /// See [FocusTraversalPolicy] for more information about focus traversal.
 class PreviousFocusIntent extends Intent {
-  /// Creates a const [PreviousFocusIntent] so subclasses can be const.
+  /// Creates an intent that is used with [PreviousFocusAction].
   const PreviousFocusIntent();
 }
 
@@ -1903,8 +1697,7 @@ class PreviousFocusAction extends Action<PreviousFocusIntent> {
 ///
 /// See [FocusTraversalPolicy] for more information about focus traversal.
 class DirectionalFocusIntent extends Intent {
-  /// Creates a [DirectionalFocusIntent] intending to move the focus in the
-  /// given [direction].
+  /// Creates an intent used to move the focus in the given [direction].
   const DirectionalFocusIntent(this.direction, {this.ignoreTextFields = true})
       : assert(ignoreTextFields != null);
 
@@ -1928,9 +1721,18 @@ class DirectionalFocusIntent extends Intent {
 /// [LogicalKeyboardKey.arrowLeft], and [LogicalKeyboardKey.arrowRight] keys in
 /// the [WidgetsApp], with the appropriate associated directions.
 class DirectionalFocusAction extends Action<DirectionalFocusIntent> {
+  /// Creates a [DirectionalFocusAction].
+  DirectionalFocusAction() : _isForTextField = false;
+
+  /// Creates a [DirectionalFocusAction] that ignores [DirectionalFocusIntent]s
+  /// whose `ignoreTextFields` field is true.
+  DirectionalFocusAction.forTextField() : _isForTextField = true;
+
+  // Whether this action is defined in a text field.
+  final bool _isForTextField;
   @override
   void invoke(DirectionalFocusIntent intent) {
-    if (!intent.ignoreTextFields || primaryFocus!.context!.widget is! EditableText) {
+    if (!intent.ignoreTextFields || !_isForTextField) {
       primaryFocus!.focusInDirection(intent.direction);
     }
   }

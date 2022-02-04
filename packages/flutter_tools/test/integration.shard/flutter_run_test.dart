@@ -2,12 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// @dart = 2.8
+
 import 'package:file/file.dart';
 import 'package:flutter_tools/src/base/io.dart';
 import 'package:process/process.dart';
 
 import '../src/common.dart';
-import '../src/context.dart';
 import 'test_data/basic_project.dart';
 import 'test_driver.dart';
 import 'test_utils.dart';
@@ -49,12 +50,6 @@ void main() {
     }
   });
 
-  testWithoutContext('flutter run writes pid-file', () async {
-    final File pidFile = tempDir.childFile('test.pid');
-    await _flutter.run(pidFile: pidFile);
-    expect(pidFile.existsSync(), isTrue);
-  });
-
   testWithoutContext('sets activeDevToolsServerAddress extension', () async {
     await _flutter.run(
       startPaused: true,
@@ -74,5 +69,5 @@ void main() {
       continuePollingValue: '',
       matches: isNotEmpty,
     );
-  }, timeout: const Timeout.factor(4));
+  });
 }

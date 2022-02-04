@@ -67,12 +67,7 @@ class GridTileBar extends StatelessWidget {
       end: trailing != null ? 8.0 : 16.0,
     );
 
-    final ThemeData theme = Theme.of(context);
-    final ThemeData darkTheme = ThemeData(
-      brightness: Brightness.dark,
-      accentColor: theme.accentColor,
-      accentColorBrightness: theme.accentColorBrightness,
-    );
+    final ThemeData darkTheme = ThemeData.dark();
     return Container(
       padding: padding,
       decoration: decoration,
@@ -82,7 +77,6 @@ class GridTileBar extends StatelessWidget {
         child: IconTheme.merge(
           data: const IconThemeData(color: Colors.white),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               if (leading != null)
                 Padding(padding: const EdgeInsetsDirectional.only(end: 8.0), child: leading),

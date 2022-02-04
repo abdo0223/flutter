@@ -2,13 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// This file is run as part of a reduced test set in CI on Mac and Windows
+// machines.
+@Tags(<String>['reduced-test-set'])
+
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/material.dart';
 
 import '../rendering/mock_canvas.dart';
 import '../widgets/semantics_tester.dart';
@@ -292,7 +296,7 @@ void main() {
     final Key key = UniqueKey();
     dynamic semanticEvent;
     int? radioValue = 2;
-    SystemChannels.accessibility.setMockMessageHandler((dynamic message) async {
+    tester.binding.defaultBinaryMessenger.setMockDecodedMessageHandler<dynamic>(SystemChannels.accessibility, (dynamic message) async {
       semanticEvent = message;
     });
 
@@ -308,7 +312,7 @@ void main() {
     ));
 
     await tester.tap(find.byKey(key));
-    final RenderObject object = tester.firstRenderObject(find.byType(Focus));
+    final RenderObject object = tester.firstRenderObject(find.byKey(key));
 
     expect(radioValue, 1);
     expect(semanticEvent, <String, dynamic>{
@@ -319,7 +323,7 @@ void main() {
     expect(object.debugSemantics!.getSemanticsData().hasAction(SemanticsAction.tap), true);
 
     semantics.dispose();
-    SystemChannels.accessibility.setMockMessageHandler(null);
+    tester.binding.defaultBinaryMessenger.setMockDecodedMessageHandler<dynamic>(SystemChannels.accessibility, null);
   });
 
   testWidgets('Radio ink ripple is displayed correctly', (WidgetTester tester) async {
@@ -388,7 +392,7 @@ void main() {
       Material.of(tester.element(
         find.byWidgetPredicate((Widget widget) => widget is Radio<int>),
       )),
-      paints..circle(color: Colors.orange[500], radius: splashRadius)
+      paints..circle(color: Colors.orange[500], radius: splashRadius),
     );
   });
 
@@ -434,7 +438,8 @@ void main() {
       paints
         ..rect(
             color: const Color(0xffffffff),
-            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0))
+            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0),
+          )
         ..circle(color: Colors.orange[500])
         ..circle(color: const Color(0xff1e88e5))
         ..circle(color: const Color(0xff1e88e5)),
@@ -450,9 +455,10 @@ void main() {
       paints
         ..rect(
             color: const Color(0xffffffff),
-            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0))
+            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0),
+          )
         ..circle(color: Colors.orange[500])
-        ..circle(color: const Color(0x8a000000), style: PaintingStyle.stroke, strokeWidth: 2.0)
+        ..circle(color: const Color(0x8a000000), style: PaintingStyle.stroke, strokeWidth: 2.0),
     );
 
     // Check when the radio is selected, but disabled.
@@ -465,7 +471,8 @@ void main() {
       paints
         ..rect(
             color: const Color(0xffffffff),
-            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0))
+            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0),
+          )
         ..circle(color: const Color(0x61000000))
         ..circle(color: const Color(0x61000000)),
     );
@@ -510,7 +517,8 @@ void main() {
       paints
         ..rect(
             color: const Color(0xffffffff),
-            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0))
+            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0),
+          )
         ..circle(color: const Color(0xff1e88e5))
         ..circle(color: const Color(0xff1e88e5)),
     );
@@ -530,7 +538,8 @@ void main() {
         paints
           ..rect(
               color: const Color(0xffffffff),
-              rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0))
+              rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0),
+            )
           ..circle(color: Colors.orange[500])
           ..circle(color: const Color(0x8a000000), style: PaintingStyle.stroke, strokeWidth: 2.0),
     );
@@ -545,7 +554,8 @@ void main() {
       paints
         ..rect(
             color: const Color(0xffffffff),
-            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0))
+            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0),
+          )
         ..circle(color: const Color(0x61000000))
         ..circle(color: const Color(0x61000000)),
     );
@@ -632,7 +642,7 @@ void main() {
   testWidgets('Radio responds to density changes.', (WidgetTester tester) async {
     const Key key = Key('test');
     Future<void> buildTest(VisualDensity visualDensity) async {
-      return await tester.pumpWidget(
+      return tester.pumpWidget(
         MaterialApp(
           home: Material(
             child: Center(
@@ -649,7 +659,7 @@ void main() {
       );
     }
 
-    await buildTest(const VisualDensity());
+    await buildTest(VisualDensity.standard);
     final RenderBox box = tester.renderObject(find.byKey(key));
     await tester.pumpAndSettle();
     expect(box.size, equals(const Size(48, 48)));
@@ -808,7 +818,8 @@ void main() {
       paints
         ..rect(
             color: const Color(0xffffffff),
-            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0))
+            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0),
+          )
         ..circle(color: activeEnabledFillColor)
         ..circle(color: activeEnabledFillColor),
     );
@@ -822,8 +833,9 @@ void main() {
         paints
           ..rect(
               color: const Color(0xffffffff),
-              rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0))
-          ..circle(color: inactiveEnabledFillColor, style: PaintingStyle.stroke, strokeWidth: 2.0)
+              rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0),
+            )
+          ..circle(color: inactiveEnabledFillColor, style: PaintingStyle.stroke, strokeWidth: 2.0),
     );
 
     // Check when the radio is selected, but disabled.
@@ -835,7 +847,8 @@ void main() {
       paints
         ..rect(
             color: const Color(0xffffffff),
-            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0))
+            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0),
+          )
         ..circle(color: activeDisabledFillColor)
         ..circle(color: activeDisabledFillColor),
     );
@@ -849,7 +862,8 @@ void main() {
       paints
         ..rect(
             color: const Color(0xffffffff),
-            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0))
+            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0),
+          )
         ..circle(color: inactiveDisabledFillColor, style: PaintingStyle.stroke, strokeWidth: 2.0),
     );
   });
@@ -912,7 +926,8 @@ void main() {
       paints
         ..rect(
             color: const Color(0xffffffff),
-            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0))
+            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0),
+          )
         ..circle(color: Colors.black12)
         ..circle(color: focusedFillColor),
     );
@@ -929,7 +944,8 @@ void main() {
       paints
         ..rect(
             color: const Color(0xffffffff),
-            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0))
+            rect: const Rect.fromLTRB(350.0, 250.0, 450.0, 350.0),
+          )
         ..circle(color: Colors.black12)
         ..circle(color: hoveredFillColor),
     );
@@ -991,7 +1007,7 @@ void main() {
       );
     }
 
-    await tester.pumpWidget(buildRadio(active: false, useOverlay: false));
+    await tester.pumpWidget(buildRadio(useOverlay: false));
     await tester.press(_findRadio());
     await tester.pumpAndSettle();
 
@@ -1019,7 +1035,7 @@ void main() {
       reason: 'Default active pressed Radio should have overlay color from fillColor',
     );
 
-    await tester.pumpWidget(buildRadio(active: false));
+    await tester.pumpWidget(buildRadio());
     await tester.press(_findRadio());
     await tester.pumpAndSettle();
 
@@ -1077,5 +1093,30 @@ void main() {
         ),
       reason: 'Hovered Radio should use overlay color $hoverOverlayColor over $hoverColor',
     );
+  });
+
+  testWidgets('Do not crash when widget disappears while pointer is down', (WidgetTester tester) async {
+    final Key key = UniqueKey();
+
+    Widget buildRadio(bool show) {
+      return MaterialApp(
+        home: Material(
+          child: Center(
+            child: show ? Radio<bool>(key: key, value: true, groupValue: false, onChanged: (_) { }) : Container(),
+          ),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(buildRadio(true));
+    final Offset center = tester.getCenter(find.byKey(key));
+    // Put a pointer down on the screen.
+    final TestGesture gesture = await tester.startGesture(center);
+    await tester.pump();
+    // While the pointer is down, the widget disappears.
+    await tester.pumpWidget(buildRadio(false));
+    expect(find.byKey(key), findsNothing);
+    // Release pointer after widget disappeared.
+    await gesture.up();
   });
 }

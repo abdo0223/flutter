@@ -4,6 +4,7 @@
 
 import 'package:meta/meta.dart';
 
+import '../../src/macos/xcode.dart';
 import '../base/file_system.dart';
 import '../base/logger.dart';
 import '../build_info.dart';
@@ -28,6 +29,9 @@ class CleanCommand extends FlutterCommand {
   final String description = 'Delete the build/ and .dart_tool/ directories.';
 
   @override
+  String get category => FlutterCommandCategory.project;
+
+  @override
   Future<Set<DevelopmentArtifact>> get requiredArtifacts async => const <DevelopmentArtifact>{};
 
   @override
@@ -35,7 +39,8 @@ class CleanCommand extends FlutterCommand {
     // Clean Xcode to remove intermediate DerivedData artifacts.
     // Do this before removing ephemeral directory, which would delete the xcworkspace.
     final FlutterProject flutterProject = FlutterProject.current();
-    if (globals.xcode.isInstalledAndMeetsVersionCheck) {
+    final Xcode? xcode = globals.xcode;
+    if (xcode != null && xcode.isInstalledAndMeetsVersionCheck) {
       await _cleanXcode(flutterProject.ios);
       await _cleanXcode(flutterProject.macos);
     }
@@ -49,6 +54,7 @@ class CleanCommand extends FlutterCommand {
     deleteFile(flutterProject.android.ephemeralDirectory);
 
     deleteFile(flutterProject.ios.ephemeralDirectory);
+    deleteFile(flutterProject.ios.ephemeralModuleDirectory);
     deleteFile(flutterProject.ios.generatedXcodePropertiesFile);
     deleteFile(flutterProject.ios.generatedEnvironmentVariableExportScript);
     deleteFile(flutterProject.ios.deprecatedCompiledDartFramework);
@@ -72,15 +78,16 @@ class CleanCommand extends FlutterCommand {
       'Cleaning Xcode workspace...',
     );
     try {
+      final XcodeProjectInterpreter xcodeProjectInterpreter = globals.xcodeProjectInterpreter!;
       final Directory xcodeWorkspace = xcodeProject.xcodeWorkspace;
-      final XcodeProjectInfo projectInfo = await globals.xcodeProjectInterpreter.getInfo(xcodeWorkspace.parent.path);
+      final XcodeProjectInfo projectInfo = await xcodeProjectInterpreter.getInfo(xcodeWorkspace.parent.path);
       for (final String scheme in projectInfo.schemes) {
-        await globals.xcodeProjectInterpreter.cleanWorkspace(xcodeWorkspace.path, scheme, verbose: _verbose);
+        await xcodeProjectInterpreter.cleanWorkspace(xcodeWorkspace.path, scheme, verbose: _verbose);
       }
     } on Exception catch (error) {
       globals.printTrace('Could not clean Xcode workspace: $error');
     } finally {
-      xcodeStatus?.stop();
+      xcodeStatus.stop();
     }
   }
 

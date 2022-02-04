@@ -44,6 +44,9 @@ void main() {
             onSelectChanged: (bool? selected) {
               log.add('row-selected: ${dessert.name}');
             },
+            onLongPress: () {
+              log.add('onLongPress: ${dessert.name}');
+            },
             cells: <DataCell>[
               DataCell(
                 Text(dessert.name),
@@ -53,6 +56,18 @@ void main() {
                 showEditIcon: true,
                 onTap: () {
                   log.add('cell-tap: ${dessert.calories}');
+                },
+                onDoubleTap: () {
+                  log.add('cell-doubleTap: ${dessert.calories}');
+                },
+                onLongPress: () {
+                  log.add('cell-longPress: ${dessert.calories}');
+                },
+                onTapCancel: () {
+                  log.add('cell-tapCancel: ${dessert.calories}');
+                },
+                onTapDown: (TapDownDetails details) {
+                  log.add('cell-tapDown: ${dessert.calories}');
                 },
               ),
             ],
@@ -75,6 +90,11 @@ void main() {
     expect(log, <String>['row-selected: Cupcake']);
     log.clear();
 
+    await tester.longPress(find.text('Cupcake'));
+
+    expect(log, <String>['onLongPress: Cupcake']);
+    log.clear();
+
     await tester.tap(find.text('Calories'));
 
     expect(log, <String>['column-sort: 1 true']);
@@ -95,8 +115,40 @@ void main() {
     await tester.pumpAndSettle(const Duration(milliseconds: 200));
 
     await tester.tap(find.text('375'));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(find.text('375'));
 
-    expect(log, <String>['cell-tap: 375']);
+    expect(log, <String>['cell-doubleTap: 375']);
+    log.clear();
+
+    await tester.longPress(find.text('375'));
+    // The tap down is triggered on gesture down.
+    // Then, the cancel is triggered when the gesture arena
+    // recognizes that the long press overrides the tap event
+    // so it triggers a tap cancel, followed by the long press.
+    expect(log,<String>['cell-tapDown: 375' ,'cell-tapCancel: 375', 'cell-longPress: 375']);
+    log.clear();
+
+    TestGesture gesture = await tester.startGesture(
+      tester.getRect(find.text('375')).center,
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    // onTapDown callback is registered.
+    expect(log, equals(<String>['cell-tapDown: 375']));
+    await gesture.up();
+
+    await tester.pump(const Duration(seconds: 1));
+    // onTap callback is registered after the gesture is removed.
+    expect(log, equals(<String>['cell-tapDown: 375', 'cell-tap: 375']));
+    log.clear();
+
+    // dragging off the bounds of the cell calls the cancel callback
+    gesture = await tester.startGesture(tester.getRect(find.text('375')).center);
+    await tester.pump(const Duration(milliseconds: 100));
+    await gesture.moveBy(const Offset(0.0, 200.0));
+    await gesture.cancel();
+    expect(log, equals(<String>['cell-tapDown: 375', 'cell-tapCancel: 375']));
+
     log.clear();
 
     await tester.tap(find.byType(Checkbox).last);
@@ -412,13 +464,13 @@ void main() {
 
     // Check for ascending list
     await tester.pumpWidget(MaterialApp(
-      home: Material(child: buildTable(sortAscending: true)),
+      home: Material(child: buildTable()),
     ));
     // The `tester.widget` ensures that there is exactly one upward arrow.
     Transform transformOfArrow = tester.widget<Transform>(find.widgetWithIcon(Transform, Icons.arrow_upward));
     expect(
       transformOfArrow.transform.getRotation(),
-      equals(Matrix3.identity())
+      equals(Matrix3.identity()),
     );
 
     // Check for descending list.
@@ -430,7 +482,7 @@ void main() {
     transformOfArrow = tester.widget<Transform>(find.widgetWithIcon(Transform, Icons.arrow_upward));
     expect(
       transformOfArrow.transform.getRotation(),
-      equals(Matrix3.rotationZ(math.pi))
+      equals(Matrix3.rotationZ(math.pi)),
     );
   });
 
@@ -1108,7 +1160,7 @@ void main() {
               DataCell(Text('A long desert name')),
             ],
           ),
-        ]
+        ],
       );
     }
 
@@ -1129,9 +1181,7 @@ void main() {
 
     // Turn on sorting
     await tester.pumpWidget(MaterialApp(
-      home: Material(child: buildTable(
-        sortEnabled: true,
-      )),
+      home: Material(child: buildTable()),
     ));
 
     {
@@ -1182,7 +1232,7 @@ void main() {
               DataCell(Text('Content2')),
             ],
           ),
-        ]
+        ],
       );
     }
 
@@ -1238,7 +1288,7 @@ void main() {
       return tableRow.decoration! as BoxDecoration;
     }
 
-    await tester.pumpWidget(buildTable(selected: false));
+    await tester.pumpWidget(buildTable());
     expect(lastTableRowBoxDecoration().color, null);
 
     await tester.pumpWidget(buildTable(selected: true));
@@ -1407,7 +1457,7 @@ void main() {
               DataCell(Text('Content1')),
             ],
           ),
-        ]
+        ],
       );
     }
 
@@ -1495,5 +1545,194 @@ void main() {
       tester.getBottomRight(find.byType(Table)),
       const Offset(width - borderVertical, height - borderHorizontal),
     );
+  });
+
+  testWidgets('checkboxHorizontalMargin properly applied', (WidgetTester tester) async {
+    const double _customCheckboxHorizontalMargin = 15.0;
+    const double _customHorizontalMargin = 10.0;
+    Finder cellContent;
+    Finder checkbox;
+    Finder padding;
+
+    Widget buildCustomTable({
+      int? sortColumnIndex,
+      bool sortAscending = true,
+      double? horizontalMargin,
+      double? checkboxHorizontalMargin,
+    }) {
+      return DataTable(
+        sortColumnIndex: sortColumnIndex,
+        sortAscending: sortAscending,
+        onSelectAll: (bool? value) {},
+        horizontalMargin: horizontalMargin,
+        checkboxHorizontalMargin: checkboxHorizontalMargin,
+        columns: <DataColumn>[
+          const DataColumn(
+            label: Text('Name'),
+            tooltip: 'Name',
+          ),
+          DataColumn(
+            label: const Text('Calories'),
+            tooltip: 'Calories',
+            numeric: true,
+            onSort: (int columnIndex, bool ascending) {},
+          ),
+          DataColumn(
+            label: const Text('Fat'),
+            tooltip: 'Fat',
+            numeric: true,
+            onSort: (int columnIndex, bool ascending) {},
+          ),
+        ],
+        rows: kDesserts.map<DataRow>((Dessert dessert) {
+          return DataRow(
+            key: ValueKey<String>(dessert.name),
+            onSelectChanged: (bool? selected) {},
+            cells: <DataCell>[
+              DataCell(
+                Text(dessert.name),
+              ),
+              DataCell(
+                Text('${dessert.calories}'),
+                showEditIcon: true,
+                onTap: () {},
+              ),
+              DataCell(
+                Text('${dessert.fat}'),
+                showEditIcon: true,
+                onTap: () {},
+              ),
+            ],
+          );
+        }).toList(),
+      );
+    }
+
+    await tester.pumpWidget(MaterialApp(
+      home: Material(child: buildCustomTable(
+        checkboxHorizontalMargin: _customCheckboxHorizontalMargin,
+        horizontalMargin: _customHorizontalMargin,
+      )),
+    ));
+
+    // Custom checkbox padding.
+    checkbox = find.byType(Checkbox).first;
+    padding = find.ancestor(of: checkbox, matching: find.byType(Padding));
+    expect(
+      tester.getRect(checkbox).left - tester.getRect(padding).left,
+      _customCheckboxHorizontalMargin,
+    );
+    expect(
+      tester.getRect(padding).right - tester.getRect(checkbox).right,
+      _customCheckboxHorizontalMargin,
+    );
+
+    // First column padding.
+    padding = find.widgetWithText(Padding, 'Frozen yogurt').first;
+    cellContent = find.widgetWithText(Align, 'Frozen yogurt'); // DataTable wraps its DataCells in an Align widget.
+    expect(
+      tester.getRect(cellContent).left - tester.getRect(padding).left,
+      _customHorizontalMargin,
+    );
+  });
+
+  testWidgets('DataRow is disabled when onSelectChanged is not set', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Material(
+          child: DataTable(
+            columns: const <DataColumn>[
+              DataColumn(label: Text('Col1')),
+              DataColumn(label: Text('Col2')),
+            ],
+            rows: <DataRow>[
+              DataRow(cells: const <DataCell>[
+                DataCell(Text('Hello')),
+                DataCell(Text('world')),
+              ],
+              onSelectChanged: (bool? value) {},
+              ),
+              const DataRow(cells: <DataCell>[
+                DataCell(Text('Bug')),
+                DataCell(Text('report')),
+              ]),
+              const DataRow(cells: <DataCell>[
+                DataCell(Text('GitHub')),
+                DataCell(Text('issue')),
+              ]),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.widgetWithText(TableRowInkWell, 'Hello'), findsOneWidget);
+    expect(find.widgetWithText(TableRowInkWell, 'Bug'), findsNothing);
+    expect(find.widgetWithText(TableRowInkWell, 'GitHub'), findsNothing);
+  });
+
+  testWidgets('DataTable set interior border test', (WidgetTester tester) async {
+    const List<DataColumn> columns = <DataColumn>[
+      DataColumn(label: Text('column1')),
+      DataColumn(label: Text('column2')),
+    ];
+
+    const List<DataCell> cells = <DataCell>[
+      DataCell(Text('cell1')),
+      DataCell(Text('cell2')),
+    ];
+
+    const List<DataRow> rows = <DataRow>[
+      DataRow(cells: cells),
+      DataRow(cells: cells),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Material(
+          child: DataTable(
+            border: TableBorder.all(width: 2, color: Colors.red),
+            columns: columns,
+            rows: rows,
+          ),
+        ),
+      ),
+    );
+
+    final Finder finder = find.byType(DataTable);
+    expect(tester.getSize(finder), equals(const Size(800, 600)));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Material(
+          child: DataTable(
+            border: TableBorder.all(color: Colors.red),
+            columns: columns,
+            rows: rows,
+          ),
+        ),
+      ),
+    );
+
+    Table table = tester.widget(find.byType(Table));
+    TableBorder? tableBorder = table.border;
+    expect(tableBorder!.top.color, Colors.red);
+    expect(tableBorder.bottom.width, 1);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Material(
+          child: DataTable(
+            columns: columns,
+            rows: rows,
+          ),
+        ),
+      ),
+    );
+
+    table = tester.widget(find.byType(Table));
+    tableBorder = table.border;
+    expect(tableBorder?.bottom.width, null);
+    expect(tableBorder?.top.color, null);
   });
 }

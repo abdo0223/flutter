@@ -3,11 +3,12 @@
 // found in the LICENSE file.
 
 import 'package:flutter/rendering.dart';
-import 'package:flutter/semantics.dart';
-import 'package:vector_math/vector_math_64.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vector_math/vector_math_64.dart';
 
 import '../rendering/rendering_tester.dart';
+
+const int kMaxFrameworkAccessibilityIdentifier = (1<<16) - 1;
 
 void main() {
   setUp(() {
@@ -62,6 +63,111 @@ void main() {
       expect(node.getSemanticsData().tags, tags);
     });
 
+    test('SemanticsConfiguration can set both string label/value/hint and attributed version', () {
+      final SemanticsConfiguration config = SemanticsConfiguration();
+      config.label = 'label1';
+      expect(config.label, 'label1');
+      expect(config.attributedLabel.string, 'label1');
+      expect(config.attributedLabel.attributes.isEmpty, isTrue);
+      expect(
+        (SemanticsNode()..updateWith(config: config)).toString(),
+        'SemanticsNode#1(STALE, owner: null, Rect.fromLTRB(0.0, 0.0, 0.0, 0.0), invisible, label: "label1")',
+      );
+
+      config.attributedLabel = AttributedString(
+        'label2',
+        attributes: <StringAttribute>[
+          SpellOutStringAttribute(range: const TextRange(start: 0, end:1)),
+        ]
+      );
+      expect(config.label, 'label2');
+      expect(config.attributedLabel.string, 'label2');
+      expect(config.attributedLabel.attributes.length, 1);
+      expect(config.attributedLabel.attributes[0] is SpellOutStringAttribute, isTrue);
+      expect(config.attributedLabel.attributes[0].range, const TextRange(start: 0, end: 1));
+      expect(
+        (SemanticsNode()..updateWith(config: config)).toString(),
+        'SemanticsNode#2(STALE, owner: null, Rect.fromLTRB(0.0, 0.0, 0.0, 0.0), invisible, label: "label2" [SpellOutStringAttribute(TextRange(start: 0, end: 1))])',
+      );
+
+      config.label = 'label3';
+      expect(config.label, 'label3');
+      expect(config.attributedLabel.string, 'label3');
+      expect(config.attributedLabel.attributes.isEmpty, isTrue);
+      expect(
+        (SemanticsNode()..updateWith(config: config)).toString(),
+        'SemanticsNode#3(STALE, owner: null, Rect.fromLTRB(0.0, 0.0, 0.0, 0.0), invisible, label: "label3")',
+      );
+
+      config.value = 'value1';
+      expect(config.value, 'value1');
+      expect(config.attributedValue.string, 'value1');
+      expect(config.attributedValue.attributes.isEmpty, isTrue);
+      expect(
+        (SemanticsNode()..updateWith(config: config)).toString(),
+        'SemanticsNode#4(STALE, owner: null, Rect.fromLTRB(0.0, 0.0, 0.0, 0.0), invisible, label: "label3", value: "value1")',
+      );
+
+      config.attributedValue = AttributedString(
+          'value2',
+          attributes: <StringAttribute>[
+            SpellOutStringAttribute(range: const TextRange(start: 0, end:1)),
+          ]
+      );
+      expect(config.value, 'value2');
+      expect(config.attributedValue.string, 'value2');
+      expect(config.attributedValue.attributes.length, 1);
+      expect(config.attributedValue.attributes[0] is SpellOutStringAttribute, isTrue);
+      expect(config.attributedValue.attributes[0].range, const TextRange(start: 0, end: 1));
+      expect(
+        (SemanticsNode()..updateWith(config: config)).toString(),
+        'SemanticsNode#5(STALE, owner: null, Rect.fromLTRB(0.0, 0.0, 0.0, 0.0), invisible, label: "label3", value: "value2" [SpellOutStringAttribute(TextRange(start: 0, end: 1))])',
+      );
+
+      config.value = 'value3';
+      expect(config.value, 'value3');
+      expect(config.attributedValue.string, 'value3');
+      expect(config.attributedValue.attributes.isEmpty, isTrue);
+      expect(
+        (SemanticsNode()..updateWith(config: config)).toString(),
+        'SemanticsNode#6(STALE, owner: null, Rect.fromLTRB(0.0, 0.0, 0.0, 0.0), invisible, label: "label3", value: "value3")',
+      );
+
+      config.hint = 'hint1';
+      expect(config.hint, 'hint1');
+      expect(config.attributedHint.string, 'hint1');
+      expect(config.attributedHint.attributes.isEmpty, isTrue);
+      expect(
+        (SemanticsNode()..updateWith(config: config)).toString(),
+        'SemanticsNode#7(STALE, owner: null, Rect.fromLTRB(0.0, 0.0, 0.0, 0.0), invisible, label: "label3", value: "value3", hint: "hint1")',
+      );
+
+      config.attributedHint = AttributedString(
+          'hint2',
+          attributes: <StringAttribute>[
+            SpellOutStringAttribute(range: const TextRange(start: 0, end:1)),
+          ]
+      );
+      expect(config.hint, 'hint2');
+      expect(config.attributedHint.string, 'hint2');
+      expect(config.attributedHint.attributes.length, 1);
+      expect(config.attributedHint.attributes[0] is SpellOutStringAttribute, isTrue);
+      expect(config.attributedHint.attributes[0].range, const TextRange(start: 0, end: 1));
+      expect(
+        (SemanticsNode()..updateWith(config: config)).toString(),
+        'SemanticsNode#8(STALE, owner: null, Rect.fromLTRB(0.0, 0.0, 0.0, 0.0), invisible, label: "label3", value: "value3", hint: "hint2" [SpellOutStringAttribute(TextRange(start: 0, end: 1))])',
+      );
+
+      config.hint = 'hint3';
+      expect(config.hint, 'hint3');
+      expect(config.attributedHint.string, 'hint3');
+      expect(config.attributedHint.attributes.isEmpty, isTrue);
+      expect(
+        (SemanticsNode()..updateWith(config: config)).toString(),
+        'SemanticsNode#9(STALE, owner: null, Rect.fromLTRB(0.0, 0.0, 0.0, 0.0), invisible, label: "label3", value: "value3", hint: "hint3")',
+      );
+    });
+
     test('mutate existing semantic node list errors', () {
       final SemanticsNode node = SemanticsNode()
         ..rect = const Rect.fromLTRB(0.0, 0.0, 10.0, 10.0);
@@ -81,9 +187,10 @@ void main() {
         childrenInInversePaintOrder: children,
       );
 
-      children.add(SemanticsNode()
-        ..isMergedIntoParent = true
-        ..rect = const Rect.fromLTRB(42.0, 42.0, 10.0, 10.0)
+      children.add(
+        SemanticsNode()
+          ..isMergedIntoParent = true
+          ..rect = const Rect.fromLTRB(42.0, 42.0, 10.0, 10.0),
       );
 
       {
@@ -100,7 +207,7 @@ void main() {
           'Failed to replace child semantics nodes because the list of `SemanticsNode`s was mutated.\n'
           'Instead of mutating the existing list, create a new list containing the desired `SemanticsNode`s.\n'
           'Error details:\n'
-          "The list's length has changed from 1 to 2."
+          "The list's length has changed from 1 to 2.",
         ));
         expect(
           error.diagnostics.singleWhere((DiagnosticsNode node) => node.level == DiagnosticLevel.hint).toString(),
@@ -149,7 +256,7 @@ void main() {
           '\n'
           '   Child node at position 1 was replaced:\n'
           '   Previous child: SemanticsNode#7(STALE, owner: null, merged up ⬆️, Rect.fromLTRB(40.0, 14.0, 20.0, 20.0))\n'
-          '   New child: SemanticsNode#5(STALE, owner: null, merged up ⬆️, Rect.fromLTRB(10.0, 10.0, 20.0, 20.0))\n'
+          '   New child: SemanticsNode#5(STALE, owner: null, merged up ⬆️, Rect.fromLTRB(10.0, 10.0, 20.0, 20.0))\n',
         ));
 
         expect(
@@ -170,13 +277,10 @@ void main() {
         isSemanticBoundary: true,
         child: TestRender(
           hasLongPressAction: true,
-          isSemanticBoundary: false,
           child: middle = TestRender(
             hasScrollLeftAction: true,
-            isSemanticBoundary: false,
             child: TestRender(
               hasScrollRightAction: true,
-              isSemanticBoundary: false,
               child: TestRender(
                 hasScrollUpAction: true,
                 isSemanticBoundary: true,
@@ -221,7 +325,7 @@ void main() {
     expect(child2.transform, isNull);
 
     expect(
-      root.toStringDeep(childOrder: DebugSemanticsDumpOrder.traversalOrder),
+      root.toStringDeep(),
       'SemanticsNode#3\n'
       ' │ STALE\n'
       ' │ owner: null\n'
@@ -307,7 +411,7 @@ void main() {
       childrenInInversePaintOrder: <SemanticsNode>[child1, child2],
     );
     expect(
-      root.toStringDeep(childOrder: DebugSemanticsDumpOrder.traversalOrder),
+      root.toStringDeep(),
       'SemanticsNode#3\n'
       ' │ STALE\n'
       ' │ owner: null\n'
@@ -362,7 +466,7 @@ void main() {
     );
 
     expect(
-      rootComplex.toStringDeep(childOrder: DebugSemanticsDumpOrder.traversalOrder),
+      rootComplex.toStringDeep(),
       'SemanticsNode#7\n'
       ' │ STALE\n'
       ' │ owner: null\n'
@@ -484,20 +588,20 @@ void main() {
     final SemanticsNode allProperties = SemanticsNode()
       ..rect = const Rect.fromLTWH(50.0, 10.0, 20.0, 30.0)
       ..transform = Matrix4.translation(Vector3(10.0, 10.0, 0.0))
-      ..updateWith(config: config, childrenInInversePaintOrder: null);
+      ..updateWith(config: config);
     expect(
       allProperties.toStringDeep(),
       equalsIgnoringHashCodes(
-          'SemanticsNode#2\n'
-          '   STALE\n'
-          '   owner: null\n'
-          '   merge boundary ⛔️\n'
-          '   Rect.fromLTRB(60.0, 20.0, 80.0, 50.0)\n'
-          '   actions: longPress, scrollUp, showOnScreen\n'
-          '   flags: hasCheckedState, isSelected, isButton\n'
-          '   label: "Use all the properties"\n'
-          '   textDirection: rtl\n'
-          '   sortKey: OrdinalSortKey#19df5(order: 1.0)\n'
+        'SemanticsNode#2\n'
+        '   STALE\n'
+        '   owner: null\n'
+        '   merge boundary ⛔️\n'
+        '   Rect.fromLTRB(60.0, 20.0, 80.0, 50.0)\n'
+        '   actions: longPress, scrollUp, showOnScreen\n'
+        '   flags: hasCheckedState, isSelected, isButton\n'
+        '   label: "Use all the properties"\n'
+        '   textDirection: rtl\n'
+        '   sortKey: OrdinalSortKey#19df5(order: 1.0)\n',
       ),
     );
     expect(
@@ -568,6 +672,45 @@ void main() {
     );
   });
 
+  test('Attributed String can concate', () {
+    final AttributedString string1 = AttributedString(
+      'string1',
+      attributes: <StringAttribute>[
+        SpellOutStringAttribute(range: const TextRange(start:0, end:4)),
+      ]
+    );
+    final AttributedString string2 = AttributedString(
+        'string2',
+        attributes: <StringAttribute>[
+          LocaleStringAttribute(locale: const Locale('es', 'MX'), range: const TextRange(start:0, end:4)),
+        ]
+    );
+    final AttributedString result = string1 + string2;
+    expect(result.string, 'string1string2');
+    expect(result.attributes.length, 2);
+    expect(result.attributes[0].range, const TextRange(start:0, end:4));
+    expect(result.attributes[0] is SpellOutStringAttribute, isTrue);
+    expect(result.toString(), "AttributedString('string1string2', attributes: [SpellOutStringAttribute(TextRange(start: 0, end: 4)), LocaleStringAttribute(TextRange(start: 7, end: 11), es-MX)])");
+  });
+
+  test('Semantics id does not repeat', () {
+    final SemanticsOwner owner = SemanticsOwner();
+    const int expectId = 1400;
+    SemanticsNode? nodeToRemove;
+    for (int i = 0; i < kMaxFrameworkAccessibilityIdentifier; i++) {
+      final SemanticsNode node = SemanticsNode();
+      node.attach(owner);
+      if (node.id == expectId) {
+        nodeToRemove = node;
+      }
+    }
+    nodeToRemove!.detach();
+    final SemanticsNode newNode = SemanticsNode();
+    newNode.attach(owner);
+    // Id is reused.
+    expect(newNode.id, expectId);
+  });
+
   test('Tags show up in debug properties', () {
     final SemanticsNode actionNode = SemanticsNode()
       ..tags = <SemanticsTag>{RenderViewport.useTwoPaneSemantics};
@@ -617,18 +760,18 @@ void main() {
     config.isFocused = true;
     config.isTextField = true;
 
-    final VoidCallback onShowOnScreen = () { };
-    final VoidCallback onScrollDown = () { };
-    final VoidCallback onScrollUp = () { };
-    final VoidCallback onScrollLeft = () { };
-    final VoidCallback onScrollRight = () { };
-    final VoidCallback onLongPress = () { };
-    final VoidCallback onDecrease = () { };
-    final VoidCallback onIncrease = () { };
-    final MoveCursorHandler onMoveCursorForwardByCharacter = (bool _) { };
-    final MoveCursorHandler onMoveCursorBackwardByCharacter = (bool _) { };
-    final VoidCallback onTap = () { };
-    final VoidCallback onCustomAction = () { };
+    void onShowOnScreen() { }
+    void onScrollDown() { }
+    void onScrollUp() { }
+    void onScrollLeft() { }
+    void onScrollRight() { }
+    void onLongPress() { }
+    void onDecrease() { }
+    void onIncrease() { }
+    void onMoveCursorForwardByCharacter(bool _) { }
+    void onMoveCursorBackwardByCharacter(bool _) { }
+    void onTap() { }
+    void onCustomAction() { }
 
     config.onShowOnScreen = onShowOnScreen;
     config.onScrollDown = onScrollDown;

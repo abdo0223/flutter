@@ -101,6 +101,21 @@ enum HeroFlightDirection {
 ///
 /// {@youtube 560 315 https://www.youtube.com/watch?v=Be9UH1kXFDw}
 ///
+/// {@tool dartpad}
+/// This sample shows a [Hero] used within a [ListTile].
+///
+/// Tapping on the Hero-wrapped rectangle triggers a hero
+/// animation as a new [MaterialPageRoute] is pushed. Both the size
+/// and location of the rectangle animates.
+///
+/// Both widgets use the same [Hero.tag].
+///
+/// The Hero widget uses the matching tags to identify and execute this
+/// animation.
+///
+/// ** See code in examples/api/lib/widgets/heroes/hero.0.dart **
+/// {@end-tool}
+///
 /// ## Discussion
 ///
 /// Heroes and the [Navigator]'s [Overlay] [Stack] must be axis-aligned for
@@ -258,7 +273,7 @@ class Hero extends StatefulWidget {
             ErrorDescription(
               'Within each subtree for which heroes are to be animated (i.e. a PageRoute subtree), '
               'each Hero must have a unique non-null tag.\n'
-              'In this case, multiple heroes had the following tag: $tag\n'
+              'In this case, multiple heroes had the following tag: $tag',
             ),
             DiagnosticsProperty<StatefulElement>('Here is the subtree for one of the offending heroes', hero, linePrefix: '# ', style: DiagnosticsTreeStyle.dense),
           ]);
@@ -306,7 +321,7 @@ class Hero extends StatefulWidget {
   }
 
   @override
-  _HeroState createState() => _HeroState();
+  State<Hero> createState() => _HeroState();
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
@@ -363,7 +378,7 @@ class _HeroState extends State<Hero> {
 
     _placeholderSize = null;
     if (mounted) {
-      // Tell the widget to rebuild if it's mounted. _paceholderSize has already
+      // Tell the widget to rebuild if it's mounted. _placeholderSize has already
       // been updated.
       setState(() {});
     }
@@ -373,7 +388,7 @@ class _HeroState extends State<Hero> {
   Widget build(BuildContext context) {
     assert(
       context.findAncestorWidgetOfExactType<Hero>() == null,
-      'A Hero widget cannot be the descendant of another Hero widget.'
+      'A Hero widget cannot be the descendant of another Hero widget.',
     );
 
     final bool showPlaceholder = _placeholderSize != null;
@@ -532,8 +547,8 @@ class _HeroFlight {
           left: offsets.left,
           child: IgnorePointer(
             child: RepaintBoundary(
-              child: Opacity(
-                opacity: _heroOpacity.value,
+              child: FadeTransition(
+                opacity: _heroOpacity,
                 child: child,
               ),
             ),
@@ -562,7 +577,7 @@ class _HeroFlight {
     }
   }
 
-  bool _scheduledPerformAnimtationUpdate = false;
+  bool _scheduledPerformAnimationUpdate = false;
   void _handleAnimationUpdate(AnimationStatus status) {
     // The animation will not finish until the user lifts their finger, so we
     // should suppress the status update if the gesture is in progress, and
@@ -572,23 +587,23 @@ class _HeroFlight {
       return;
     }
 
-    if (_scheduledPerformAnimtationUpdate)
+    if (_scheduledPerformAnimationUpdate)
       return;
 
     // The `navigator` must be non-null here, or the first if clause above would
     // have returned from this method.
     final NavigatorState navigator = manifest.fromRoute.navigator!;
 
-    void delayedPerformAnimtationUpdate() {
+    void delayedPerformAnimationUpdate() {
       assert(!navigator.userGestureInProgress);
-      assert(_scheduledPerformAnimtationUpdate);
-      _scheduledPerformAnimtationUpdate = false;
-      navigator.userGestureInProgressNotifier.removeListener(delayedPerformAnimtationUpdate);
+      assert(_scheduledPerformAnimationUpdate);
+      _scheduledPerformAnimationUpdate = false;
+      navigator.userGestureInProgressNotifier.removeListener(delayedPerformAnimationUpdate);
       _performAnimationUpdate(_proxyAnimation.status);
     }
     assert(navigator.userGestureInProgress);
-    _scheduledPerformAnimtationUpdate = true;
-    navigator.userGestureInProgressNotifier.addListener(delayedPerformAnimtationUpdate);
+    _scheduledPerformAnimationUpdate = true;
+    navigator.userGestureInProgressNotifier.addListener(delayedPerformAnimationUpdate);
   }
 
   void onTick() {
@@ -641,20 +656,20 @@ class _HeroFlight {
 
     manifest = initialManifest;
 
-    final bool shouldIncludeChildInPlacehold;
+    final bool shouldIncludeChildInPlaceholder;
     switch (manifest.type) {
       case HeroFlightDirection.pop:
         _proxyAnimation.parent = ReverseAnimation(manifest.animation);
-        shouldIncludeChildInPlacehold = false;
+        shouldIncludeChildInPlaceholder = false;
         break;
       case HeroFlightDirection.push:
         _proxyAnimation.parent = manifest.animation;
-        shouldIncludeChildInPlacehold = true;
+        shouldIncludeChildInPlaceholder = true;
         break;
     }
 
     heroRectTween = manifest.createHeroRectTween(begin: manifest.fromHeroLocation, end: manifest.toHeroLocation);
-    manifest.fromHero.startFlight(shouldIncludedChildInPlaceholder: shouldIncludeChildInPlacehold);
+    manifest.fromHero.startFlight(shouldIncludedChildInPlaceholder: shouldIncludeChildInPlaceholder);
     manifest.toHero.startFlight();
     manifest.overlay.insert(overlayEntry = OverlayEntry(builder: _buildOverlay));
     _proxyAnimation.addListener(onTick);
@@ -891,7 +906,7 @@ class HeroController extends NavigatorObserver {
     // If the navigator or the overlay was removed before this end-of-frame
     // callback was called, then don't actually start a transition, and we don'
     // t have to worry about any Hero widget we might have hidden in a previous
-    // flight, or onging flights.
+    // flight, or ongoing flights.
     if (navigator == null || overlay == null)
       return;
 
@@ -932,8 +947,8 @@ class HeroController extends NavigatorObserver {
             fromHero: fromHero,
             toHero: toHero,
             createRectTween: createRectTween,
-            shuttleBuilder: fromHero.widget.flightShuttleBuilder
-                          ?? toHero.widget.flightShuttleBuilder
+            shuttleBuilder: toHero.widget.flightShuttleBuilder
+                          ?? fromHero.widget.flightShuttleBuilder
                           ?? _defaultHeroFlightShuttleBuilder,
             isUserGestureTransition: isUserGestureTransition,
             isDiverted: existingFlight != null,
@@ -967,7 +982,7 @@ class HeroController extends NavigatorObserver {
     _flights.remove(flight.manifest.tag);
   }
 
-  static final HeroFlightShuttleBuilder _defaultHeroFlightShuttleBuilder = (
+  Widget _defaultHeroFlightShuttleBuilder(
     BuildContext flightContext,
     Animation<double> animation,
     HeroFlightDirection flightDirection,
@@ -976,7 +991,7 @@ class HeroController extends NavigatorObserver {
   ) {
     final Hero toHero = toHeroContext.widget as Hero;
     return toHero.child;
-  };
+  }
 }
 
 /// Enables or disables [Hero]es in the widget subtree.

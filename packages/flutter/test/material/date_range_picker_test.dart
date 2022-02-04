@@ -28,7 +28,7 @@ void main() {
   String? saveText;
 
   setUp(() {
-    firstDate = DateTime(2015, DateTime.january, 1);
+    firstDate = DateTime(2015);
     lastDate = DateTime(2016, DateTime.december, 31);
     currentDate = null;
     initialDateRange = DateTimeRange(
@@ -52,9 +52,9 @@ void main() {
 
   Future<void> preparePicker(
     WidgetTester tester,
-    Future<void> callback(Future<DateTimeRange?> date),
-    { TextDirection textDirection = TextDirection.ltr }
-  ) async {
+    Future<void> Function(Future<DateTimeRange?> date) callback, {
+    TextDirection textDirection = TextDirection.ltr,
+  }) async {
     late BuildContext buttonContext;
     await tester.pumpWidget(MaterialApp(
       home: Material(
@@ -116,16 +116,18 @@ void main() {
   testWidgets('Initial date is the default', (WidgetTester tester) async {
     await preparePicker(tester, (Future<DateTimeRange?> range) async {
       await tester.tap(find.text('SAVE'));
-      expect(await range, DateTimeRange(
-        start: DateTime(2016, DateTime.january, 15),
-        end: DateTime(2016, DateTime.january, 25)
-      ));
+      expect(
+        await range,
+        DateTimeRange(
+          start: DateTime(2016, DateTime.january, 15),
+          end: DateTime(2016, DateTime.january, 25),
+        ),
+      );
     });
   });
 
-  testWidgets('Last month header should be visible if last date is selected',
-      (WidgetTester tester) async {
-    firstDate = DateTime(2015, DateTime.january, 1);
+  testWidgets('Last month header should be visible if last date is selected', (WidgetTester tester) async {
+    firstDate = DateTime(2015);
     lastDate = DateTime(2016, DateTime.december, 31);
     initialDateRange = DateTimeRange(
       start: lastDate,
@@ -138,9 +140,8 @@ void main() {
     });
   });
 
-  testWidgets('First month header should be visible if first date is selected',
-      (WidgetTester tester) async {
-    firstDate = DateTime(2015, DateTime.january, 1);
+  testWidgets('First month header should be visible if first date is selected', (WidgetTester tester) async {
+    firstDate = DateTime(2015);
     lastDate = DateTime(2016, DateTime.december, 31);
     initialDateRange = DateTimeRange(
       start: firstDate,
@@ -154,11 +155,10 @@ void main() {
     });
   });
 
-  testWidgets('Current month header should be visible if no date is selected',
-      (WidgetTester tester) async {
-    firstDate = DateTime(2015, DateTime.january, 1);
+  testWidgets('Current month header should be visible if no date is selected', (WidgetTester tester) async {
+    firstDate = DateTime(2015);
     lastDate = DateTime(2016, DateTime.december, 31);
-    currentDate = DateTime(2016, DateTime.september, 1);
+    currentDate = DateTime(2016, DateTime.september);
     initialDateRange = null;
 
     await preparePicker(tester, (Future<DateTimeRange?> range) async {
@@ -231,7 +231,7 @@ void main() {
     });
   });
 
-  testWidgets('Can toggle to input entry mode', (WidgetTester tester) async {
+  testWidgets('Can switch from calendar to input entry mode', (WidgetTester tester) async {
     await preparePicker(tester, (Future<DateTimeRange?> range) async {
       expect(find.byType(TextField), findsNothing);
       await tester.tap(find.byIcon(Icons.edit));
@@ -240,7 +240,47 @@ void main() {
     });
   });
 
-  testWidgets('Toggle to input mode keeps selected date', (WidgetTester tester) async {
+  testWidgets('Can switch from input to calendar entry mode', (WidgetTester tester) async {
+    initialEntryMode = DatePickerEntryMode.input;
+    await preparePicker(tester, (Future<DateTimeRange?> range) async {
+      expect(find.byType(TextField), findsNWidgets(2));
+      await tester.tap(find.byIcon(Icons.calendar_today));
+      await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsNothing);
+    });
+  });
+
+  testWidgets('Can not switch out of calendarOnly mode', (WidgetTester tester) async {
+    initialEntryMode = DatePickerEntryMode.calendarOnly;
+    await preparePicker(tester, (Future<DateTimeRange?> range) async {
+      expect(find.byType(TextField), findsNothing);
+      expect(find.byIcon(Icons.edit), findsNothing);
+    });
+  });
+
+  testWidgets('Can not switch out of inputOnly mode', (WidgetTester tester) async {
+    initialEntryMode = DatePickerEntryMode.inputOnly;
+    await preparePicker(tester, (Future<DateTimeRange?> range) async {
+      expect(find.byType(TextField), findsNWidgets(2));
+      expect(find.byIcon(Icons.calendar_today), findsNothing);
+    });
+  });
+
+  testWidgets('Input only mode should validate date', (WidgetTester tester) async {
+    initialEntryMode = DatePickerEntryMode.inputOnly;
+    errorInvalidText = 'oops';
+    await preparePicker(tester, (Future<DateTimeRange?> range) async {
+      await tester.enterText(find.byType(TextField).at(0), '08/08/2014');
+      await tester.enterText(find.byType(TextField).at(1), '08/08/2014');
+      expect(find.text(errorInvalidText!), findsNothing);
+
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.text(errorInvalidText!), findsNWidgets(2));
+    });
+  });
+
+  testWidgets('Switching to input mode keeps selected date', (WidgetTester tester) async {
     await preparePicker(tester, (Future<DateTimeRange?> range) async {
       await tester.tap(find.text('12').first);
       await tester.tap(find.text('14').first);
@@ -312,7 +352,7 @@ void main() {
                    onPressed: () {
                      showDateRangePicker(
                        context: context,
-                       firstDate:DateTime(2001, DateTime.january, 1),
+                       firstDate:DateTime(2001),
                        lastDate: DateTime(2031, DateTime.december, 31),
                        builder: (BuildContext context, Widget? child) {
                          return Directionality(
@@ -572,14 +612,13 @@ void main() {
           start: DateTime(2016, DateTime.january, 19),
           end: DateTime(2016, DateTime.january, 21),
         ));
-      },
-      textDirection: TextDirection.rtl);
+      }, textDirection: TextDirection.rtl);
     });
   });
 
   group('Input mode', () {
     setUp(() {
-      firstDate = DateTime(2015, DateTime.january, 1);
+      firstDate = DateTime(2015);
       lastDate = DateTime(2017, DateTime.december, 31);
       initialDateRange = DateTimeRange(
         start: DateTime(2017, DateTime.january, 15),
@@ -757,9 +796,13 @@ void main() {
       // fill color and test them against the expected values.
       void _testInputDecorator(CustomPaint decoratorPaint, InputBorder expectedBorder, Color expectedContainerColor) {
         final dynamic/*_InputBorderPainter*/ inputBorderPainter = decoratorPaint.foregroundPainter;
+        // ignore: avoid_dynamic_calls
         final dynamic/*_InputBorderTween*/ inputBorderTween = inputBorderPainter.border;
+        // ignore: avoid_dynamic_calls
         final Animation<double> animation = inputBorderPainter.borderAnimation as Animation<double>;
+        // ignore: avoid_dynamic_calls
         final InputBorder actualBorder = inputBorderTween.evaluate(animation) as InputBorder;
+        // ignore: avoid_dynamic_calls
         final Color containerColor = inputBorderPainter.blendedColor as Color;
 
         expect(actualBorder, equals(expectedBorder));
@@ -771,7 +814,6 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         theme: ThemeData.light().copyWith(
           inputDecorationTheme: const InputDecorationTheme(
-            filled: false,
             border: border,
           ),
         ),
@@ -813,4 +855,198 @@ void main() {
       _testInputDecorator(tester.widget(borderContainers.last), border, Colors.transparent);
     });
   });
+
+  testWidgets('DatePickerDialog is state restorable', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        restorationScopeId: 'app',
+        home: _RestorableDateRangePickerDialogTestWidget(),
+      ),
+    );
+
+    // The date range picker should be closed.
+    expect(find.byType(DateRangePickerDialog), findsNothing);
+    expect(find.text('1/1/2021 to 5/1/2021'), findsOneWidget);
+
+    // Open the date range picker.
+    await tester.tap(find.text('X'));
+    await tester.pumpAndSettle();
+    expect(find.byType(DateRangePickerDialog), findsOneWidget);
+
+    final TestRestorationData restorationData = await tester.getRestorationData();
+    await tester.restartAndRestore();
+
+    // The date range picker should be open after restoring.
+    expect(find.byType(DateRangePickerDialog), findsOneWidget);
+
+    // Close the date range picker.
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+
+    // The date range picker should be closed, the text value updated to the
+    // newly selected date.
+    expect(find.byType(DateRangePickerDialog), findsNothing);
+    expect(find.text('1/1/2021 to 5/1/2021'), findsOneWidget);
+
+    // The date range picker should be open after restoring.
+    await tester.restoreFrom(restorationData);
+    expect(find.byType(DateRangePickerDialog), findsOneWidget);
+
+    // // Select a different date and close the date range picker.
+    await tester.tap(find.text('12').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('14').first);
+    await tester.pumpAndSettle();
+
+    // Restart after the new selection. It should remain selected.
+    await tester.restartAndRestore();
+
+    // Close the date range picker.
+    await tester.tap(find.text('SAVE'));
+    await tester.pumpAndSettle();
+
+    // The date range picker should be closed, the text value updated to the
+    // newly selected date.
+    expect(find.byType(DateRangePickerDialog), findsNothing);
+    expect(find.text('12/1/2021 to 14/1/2021'), findsOneWidget);
+  }, skip: isBrowser); // https://github.com/flutter/flutter/issues/33615
+
+  testWidgets('DateRangePickerDialog state restoration - DatePickerEntryMode', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        restorationScopeId: 'app',
+        home: _RestorableDateRangePickerDialogTestWidget(
+          datePickerEntryMode: DatePickerEntryMode.calendarOnly,
+        ),
+      ),
+    );
+
+    // The date range picker should be closed.
+    expect(find.byType(DateRangePickerDialog), findsNothing);
+    expect(find.text('1/1/2021 to 5/1/2021'), findsOneWidget);
+
+    // Open the date range picker.
+    await tester.tap(find.text('X'));
+    await tester.pumpAndSettle();
+    expect(find.byType(DateRangePickerDialog), findsOneWidget);
+
+    // Only in calendar mode and cannot switch out.
+    expect(find.byType(TextField), findsNothing);
+    expect(find.byIcon(Icons.edit), findsNothing);
+
+    final TestRestorationData restorationData = await tester.getRestorationData();
+    await tester.restartAndRestore();
+
+    // The date range picker should be open after restoring.
+    expect(find.byType(DateRangePickerDialog), findsOneWidget);
+    // Only in calendar mode and cannot switch out.
+    expect(find.byType(TextField), findsNothing);
+    expect(find.byIcon(Icons.edit), findsNothing);
+
+    // Tap on the barrier.
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+
+    // The date range picker should be closed, the text value should be the same
+    // as before.
+    expect(find.byType(DateRangePickerDialog), findsNothing);
+    expect(find.text('1/1/2021 to 5/1/2021'), findsOneWidget);
+
+    // The date range picker should be open after restoring.
+    await tester.restoreFrom(restorationData);
+    expect(find.byType(DateRangePickerDialog), findsOneWidget);
+    // Only in calendar mode and cannot switch out.
+    expect(find.byType(TextField), findsNothing);
+    expect(find.byIcon(Icons.edit), findsNothing);
+  }, skip: isBrowser); // https://github.com/flutter/flutter/issues/33615
+}
+
+class _RestorableDateRangePickerDialogTestWidget extends StatefulWidget {
+  const _RestorableDateRangePickerDialogTestWidget({
+    Key? key,
+    this.datePickerEntryMode = DatePickerEntryMode.calendar,
+  }) : super(key: key);
+
+  final DatePickerEntryMode datePickerEntryMode;
+
+  @override
+  _RestorableDateRangePickerDialogTestWidgetState createState() => _RestorableDateRangePickerDialogTestWidgetState();
+}
+
+class _RestorableDateRangePickerDialogTestWidgetState extends State<_RestorableDateRangePickerDialogTestWidget> with RestorationMixin {
+  @override
+  String? get restorationId => 'scaffold_state';
+
+  final RestorableDateTimeN _startDate = RestorableDateTimeN(DateTime(2021));
+  final RestorableDateTimeN _endDate = RestorableDateTimeN(DateTime(2021, 1, 5));
+  late final RestorableRouteFuture<DateTimeRange?> _restorableDateRangePickerRouteFuture = RestorableRouteFuture<DateTimeRange?>(
+    onComplete: _selectDateRange,
+    onPresent: (NavigatorState navigator, Object? arguments) {
+      return navigator.restorablePush(
+        _dateRangePickerRoute,
+        arguments: <String, dynamic>{
+          'datePickerEntryMode': widget.datePickerEntryMode.index,
+        },
+      );
+    },
+  );
+
+  @override
+  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
+    registerForRestoration(_startDate, 'start_date');
+    registerForRestoration(_endDate, 'end_date');
+    registerForRestoration(_restorableDateRangePickerRouteFuture, 'date_picker_route_future');
+  }
+
+  void _selectDateRange(DateTimeRange? newSelectedDate) {
+    if (newSelectedDate != null) {
+      setState(() {
+        _startDate.value = newSelectedDate.start;
+        _endDate.value = newSelectedDate.end;
+      });
+    }
+  }
+
+  static Route<DateTimeRange?> _dateRangePickerRoute(
+    BuildContext context,
+    Object? arguments,
+  ) {
+    return DialogRoute<DateTimeRange?>(
+      context: context,
+      builder: (BuildContext context) {
+        final Map<dynamic, dynamic> args = arguments! as Map<dynamic, dynamic>;
+        return DateRangePickerDialog(
+          restorationId: 'date_picker_dialog',
+          initialEntryMode: DatePickerEntryMode.values[args['datePickerEntryMode'] as int],
+          firstDate: DateTime(2021),
+          currentDate: DateTime(2021, 1, 25),
+          lastDate: DateTime(2022),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final DateTime? startDateTime = _startDate.value;
+    final DateTime? endDateTime = _endDate.value;
+    // Example: "25/7/1994"
+    final String startDateTimeString = '${startDateTime?.day}/${startDateTime?.month}/${startDateTime?.year}';
+    final String endDateTimeString = '${endDateTime?.day}/${endDateTime?.month}/${endDateTime?.year}';
+    return Scaffold(
+      body: Center(
+        child: Column(
+          children: <Widget>[
+            OutlinedButton(
+              onPressed: () {
+                _restorableDateRangePickerRouteFuture.present();
+              },
+              child: const Text('X'),
+            ),
+            Text('$startDateTimeString to $endDateTimeString'),
+          ],
+        ),
+      ),
+    );
+  }
 }

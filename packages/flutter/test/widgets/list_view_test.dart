@@ -3,9 +3,8 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../rendering/mock_canvas.dart';
 import '../rendering/rendering_tester.dart';
@@ -66,9 +65,7 @@ class _StatefulListViewState extends State<_StatefulListView> {
           children: List<Widget>.generate(200, (int i) {
             return Builder(
               builder: (BuildContext context) {
-                return Container(
-                  child: Alive(widget.aliveCallback(i), i),
-                );
+                return Alive(widget.aliveCallback(i), i);
               },
             );
           }),
@@ -98,6 +95,7 @@ void main() {
           itemExtent: 200.0,
           children: List<Widget>.generate(20, (int i) {
             return Container(
+              color: Colors.green,
               child: Text('$i'),
             );
           }),
@@ -148,9 +146,7 @@ void main() {
             return Builder(
               builder: (BuildContext context) {
                 log.add(i);
-                return Container(
-                  child: Text('$i'),
-                );
+                return Text('$i');
               },
             );
           }),
@@ -240,9 +236,7 @@ void main() {
         child: ListView(
           itemExtent: 100.0,
           children: List<Widget>.generate(2, (int i) {
-            return Container(
-              child: Text('$i'),
-            );
+            return Text('$i');
           }),
         ),
       ),
@@ -261,9 +255,7 @@ void main() {
         child: ListView(
           itemExtent: 100.0,
           children: List<Widget>.generate(5, (int i) {
-            return Container(
-              child: Text('$i'),
-            );
+            return Text('$i');
           }),
         ),
       ),
@@ -307,9 +299,7 @@ void main() {
             itemExtent: 100.0,
             shrinkWrap: true,
             children: List<Widget>.generate(20, (int i) {
-              return Container(
-                child: Text('$i'),
-              );
+              return Text('$i');
             }),
           ),
         ),
@@ -320,14 +310,71 @@ void main() {
     expect(find.text('19'), findsOneWidget);
   });
 
+  testWidgets('ListView with shrink wrap in bounded context correctly uses cache extent', (WidgetTester tester) async {
+    final SemanticsHandle handle = tester.ensureSemantics();
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: SizedBox(
+          height: 400,
+          child: ListView(
+            itemExtent: 100.0,
+            shrinkWrap: true,
+            children: List<Widget>.generate(20, (int i) {
+              return Text('Text $i');
+            }),
+          ),
+        ),
+      ),
+    );
+    expect(tester.getSemantics(find.text('Text 5')), matchesSemantics());
+    expect(tester.getSemantics(find.text('Text 6', skipOffstage: false)), matchesSemantics(isHidden: true));
+    expect(tester.getSemantics(find.text('Text 7', skipOffstage: false)), matchesSemantics(isHidden: true));
+    expect(tester.getSemantics(find.text('Text 8', skipOffstage: false)), matchesSemantics(isHidden: true));
+    handle.dispose();
+  });
+
+  testWidgets('ListView hidden items should stay hidden if their semantics are updated', (WidgetTester tester) async {
+    final SemanticsHandle handle = tester.ensureSemantics();
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: SizedBox(
+          height: 400,
+          child: ListView(
+            itemExtent: 100.0,
+            shrinkWrap: true,
+            children: List<Widget>.generate(20, (int i) {
+              return Text('Text $i');
+            }),
+          ),
+        ),
+      ),
+    );
+    // Scrollable maybe be marked dirty after layout.
+    await tester.pumpAndSettle();
+    expect(tester.getSemantics(find.text('Text 5')), matchesSemantics());
+    expect(tester.getSemantics(find.text('Text 6', skipOffstage: false)), matchesSemantics(isHidden: true));
+    expect(tester.getSemantics(find.text('Text 7', skipOffstage: false)), matchesSemantics(isHidden: true));
+    expect(tester.getSemantics(find.text('Text 8', skipOffstage: false)), matchesSemantics(isHidden: true));
+
+    // Marks Text 6 semantics as dirty.
+    final RenderObject text6 = tester.renderObject(find.text('Text 6', skipOffstage: false));
+    text6.markNeedsSemanticsUpdate();
+
+    // Verify the semantics is still hidden.
+    await tester.pump();
+    expect(tester.getSemantics(find.text('Text 6', skipOffstage: false)), matchesSemantics(isHidden: true));
+
+    handle.dispose();
+  });
+
   testWidgets('didFinishLayout has correct indices', (WidgetTester tester) async {
     final TestSliverChildListDelegate delegate = TestSliverChildListDelegate(
       List<Widget>.generate(
         20,
         (int i) {
-          return Container(
-            child: Text('$i', textDirection: TextDirection.ltr),
-          );
+          return Text('$i', textDirection: TextDirection.ltr);
         },
       ),
     );
@@ -403,7 +450,7 @@ void main() {
       Directionality(
         textDirection: TextDirection.ltr,
         child: Center(
-          child: Container(
+          child: SizedBox(
             height: 200.0,
             child: ListView(
               cacheExtent: 500.0,
@@ -432,12 +479,12 @@ void main() {
       Directionality(
         textDirection: TextDirection.ltr,
         child: Center(
-          child: Container(
+          child: SizedBox(
             height: 200.0,
             child: ListView(
               cacheExtent: 500.0,
-              children: <Widget>[
-                Container(
+              children: const <Widget>[
+                SizedBox(
                   height: 100.0,
                 ),
               ],
@@ -457,19 +504,19 @@ void main() {
       Directionality(
         textDirection: TextDirection.ltr,
         child: Center(
-          child: Container(
+          child: SizedBox(
             height: 200.0,
             child: ListView(
               itemExtent: 100.0,
               cacheExtent: 500.0,
-              children: <Widget>[
-                Container(
+              children: const <Widget>[
+                SizedBox(
                   height: 100.0,
                 ),
-                Container(
+                SizedBox(
                   height: 100.0,
                 ),
-                Container(
+                SizedBox(
                   height: 100.0,
                 ),
               ],
@@ -487,13 +534,13 @@ void main() {
       Directionality(
         textDirection: TextDirection.ltr,
         child: Center(
-          child: Container(
+          child: SizedBox(
             height: 200.0,
             child: ListView(
               itemExtent: 100.0,
               cacheExtent: 500.0,
-              children: <Widget>[
-                Container(
+              children: const <Widget>[
+                SizedBox(
                   height: 100.0,
                 ),
               ],
@@ -512,13 +559,13 @@ void main() {
       Directionality(
         textDirection: TextDirection.ltr,
         child: Center(
-          child: Container(
+          child: SizedBox(
             height: 200.0,
             child: ListView(
               scrollDirection: Axis.horizontal,
               itemExtent: 100.0,
-              children: <Widget>[
-                Container(
+              children: const <Widget>[
+                SizedBox(
                   height: 100.0,
                 ),
               ],
@@ -548,15 +595,15 @@ void main() {
       return Directionality(
         textDirection: TextDirection.ltr,
         child: Center(
-          child: Container(
+          child: SizedBox(
             height: 200.0,
             width: 100.0,
             child: ListView(
               controller: controller,
               scrollDirection: scrollDirection,
               itemExtent: 50.0,
-              children: <Widget>[
-                Container(
+              children: const <Widget>[
+                SizedBox(
                   height: 50.0,
                   width: 50.0,
                 ),
@@ -601,8 +648,8 @@ void main() {
       Directionality(
         textDirection: TextDirection.ltr,
         child: ListView(
-          children: <Widget>[Container(height: 2000.0)],
           clipBehavior: Clip.antiAlias,
+          children: <Widget>[Container(height: 2000.0)],
         ),
       ),
     );

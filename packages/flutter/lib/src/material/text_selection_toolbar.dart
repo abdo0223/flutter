@@ -189,7 +189,6 @@ class _TextSelectionToolbarOverflowableState extends State<_TextSelectionToolbar
       overflowOpen: _overflowOpen,
       textDirection: Directionality.of(context),
       child: AnimatedSize(
-        vsync: this,
         // This duration was eyeballed on a Pixel 2 emulator running Android
         // API 28.
         duration: const Duration(milliseconds: 140),
@@ -504,7 +503,7 @@ class _RenderTextSelectionToolbarItemsLayout extends RenderBox with ContainerRen
   // offset that painted children will be placed at.
   void _placeChildren() {
     int i = -1;
-    Size nextSize = const Size(0.0, 0.0);
+    Size nextSize = Size.zero;
     double fitWidth = 0.0;
     final RenderBox navButton = firstChild!;
     double overflowHeight = overflowOpen && !isAbove ? navButton.size.height : 0.0;
@@ -600,9 +599,9 @@ class _RenderTextSelectionToolbarItemsLayout extends RenderBox with ContainerRen
 
   @override
   bool hitTestChildren(BoxHitTestResult result, { required Offset position }) {
-    // The x, y parameters have the top left of the node's box as the origin.
     RenderBox? child = lastChild;
     while (child != null) {
+      // The x, y parameters have the top left of the node's box as the origin.
       final ToolbarItemsParentData childParentData = child.parentData! as ToolbarItemsParentData;
 
       // Don't hit test children aren't shown.

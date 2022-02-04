@@ -194,7 +194,7 @@ class SliverGridRegularTileLayout extends SliverGridLayout {
 
   @override
   int getMinChildIndexForScrollOffset(double scrollOffset) {
-    return mainAxisStride > 0.0 ? crossAxisCount * (scrollOffset ~/ mainAxisStride) : 0;
+    return mainAxisStride > precisionErrorTolerance ? crossAxisCount * (scrollOffset ~/ mainAxisStride) : 0;
   }
 
   @override
@@ -275,54 +275,20 @@ abstract class SliverGridDelegate {
 ///
 /// This delegate creates grids with equally sized and spaced tiles.
 ///
-/// {@tool dartpad --template=stateless_widget_scaffold}
-///
+/// {@tool dartpad}
 /// Here is an example using the [childAspectRatio] property. On a device with a
 /// screen width of 800.0, it creates a GridView with each tile with a width of
 /// 200.0 and a height of 100.0.
 ///
-/// ```dart
-/// Widget build(BuildContext context) {
-///   return GridView(
-///     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-///       crossAxisCount: 4,
-///       childAspectRatio: 0.5,
-///     ),
-///     children: List<Widget>.generate(20, (int i) {
-///       return Builder(builder: (BuildContext context) {
-///         return Container(
-///           child: Text('$i'),
-///         );
-///       });
-///     }),
-///   );
-/// }
-/// ```
+/// ** See code in examples/api/lib/rendering/sliver_grid/sliver_grid_delegate_with_fixed_cross_axis_count.0.dart **
 /// {@end-tool}
 ///
-/// {@tool dartpad --template=stateless_widget_scaffold}
-///
+/// {@tool dartpad}
 /// Here is an example using the [mainAxisExtent] property. On a device with a
 /// screen width of 800.0, it creates a GridView with each tile with a width of
 /// 200.0 and a height of 150.0.
 ///
-/// ```dart
-/// Widget build(BuildContext context) {
-///   return GridView(
-///     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-///       crossAxisCount: 4,
-///       mainAxisExtent: 150.0,
-///     ),
-///     children: List<Widget>.generate(20, (int i) {
-///       return Builder(builder: (BuildContext context) {
-///         return Container(
-///           child: Text('$i'),
-///         );
-///       });
-///     }),
-///   );
-/// }
-/// ```
+/// ** See code in examples/api/lib/rendering/sliver_grid/sliver_grid_delegate_with_fixed_cross_axis_count.1.dart **
 /// {@end-tool}
 ///
 /// See also:
@@ -384,8 +350,10 @@ class SliverGridDelegateWithFixedCrossAxisCount extends SliverGridDelegate {
   @override
   SliverGridLayout getLayout(SliverConstraints constraints) {
     assert(_debugAssertIsValid());
-    final double usableCrossAxisExtent = math.max(0.0,
-        constraints.crossAxisExtent - crossAxisSpacing * (crossAxisCount - 1));
+    final double usableCrossAxisExtent = math.max(
+      0.0,
+      constraints.crossAxisExtent - crossAxisSpacing * (crossAxisCount - 1),
+    );
     final double childCrossAxisExtent = usableCrossAxisExtent / crossAxisCount;
     final double childMainAxisExtent = mainAxisExtent ?? childCrossAxisExtent / childAspectRatio;
     return SliverGridRegularTileLayout(
@@ -447,7 +415,7 @@ class SliverGridDelegateWithMaxCrossAxisExtent extends SliverGridDelegate {
     this.crossAxisSpacing = 0.0,
     this.childAspectRatio = 1.0,
     this.mainAxisExtent,
-  }) : assert(maxCrossAxisExtent != null && maxCrossAxisExtent >= 0),
+  }) : assert(maxCrossAxisExtent != null && maxCrossAxisExtent > 0),
        assert(mainAxisSpacing != null && mainAxisSpacing >= 0),
        assert(crossAxisSpacing != null && crossAxisSpacing >= 0),
        assert(childAspectRatio != null && childAspectRatio > 0);
@@ -493,8 +461,10 @@ class SliverGridDelegateWithMaxCrossAxisExtent extends SliverGridDelegate {
   SliverGridLayout getLayout(SliverConstraints constraints) {
     assert(_debugAssertIsValid(constraints.crossAxisExtent));
     final int crossAxisCount = (constraints.crossAxisExtent / (maxCrossAxisExtent + crossAxisSpacing)).ceil();
-    final double usableCrossAxisExtent = math.max(0.0,
-        constraints.crossAxisExtent - crossAxisSpacing * (crossAxisCount - 1));
+    final double usableCrossAxisExtent = math.max(
+      0.0,
+      constraints.crossAxisExtent - crossAxisSpacing * (crossAxisCount - 1),
+    );
     final double childCrossAxisExtent = usableCrossAxisExtent / crossAxisCount;
     final double childMainAxisExtent = mainAxisExtent ?? childCrossAxisExtent / childAspectRatio;
     return SliverGridRegularTileLayout(

@@ -88,7 +88,6 @@ class ScrollController extends ChangeNotifier {
   ///
   /// This should not be mutated directly. [ScrollPosition] objects can be added
   /// and removed using [attach] and [detach].
-  @protected
   Iterable<ScrollPosition> get positions => _positions;
   final List<ScrollPosition> _positions = <ScrollPosition>[];
 
@@ -169,7 +168,7 @@ class ScrollController extends ChangeNotifier {
   /// value was out of range.
   void jumpTo(double value) {
     assert(_positions.isNotEmpty, 'ScrollController not attached to any scroll views.');
-    for (final ScrollPosition position in List<ScrollPosition>.from(_positions))
+    for (final ScrollPosition position in List<ScrollPosition>.of(_positions))
       position.jumpTo(value);
   }
 
@@ -255,8 +254,8 @@ class ScrollController extends ChangeNotifier {
   /// the [ScrollController] base class calls [debugFillDescription] to collect
   /// useful information from subclasses to incorporate into its return value.
   ///
-  /// If you override this, make sure to start your method with a call to
-  /// `super.debugFillDescription(description)`.
+  /// Implementations of this method should start with a call to the inherited
+  /// method, as in `super.debugFillDescription(description)`.
   @mustCallSuper
   void debugFillDescription(List<String> description) {
     if (debugLabel != null)
@@ -321,9 +320,11 @@ class TrackingScrollController extends ScrollController {
     double initialScrollOffset = 0.0,
     bool keepScrollOffset = true,
     String? debugLabel,
-  }) : super(initialScrollOffset: initialScrollOffset,
-             keepScrollOffset: keepScrollOffset,
-             debugLabel: debugLabel);
+  }) : super(
+         initialScrollOffset: initialScrollOffset,
+         keepScrollOffset: keepScrollOffset,
+         debugLabel: debugLabel,
+       );
 
   final Map<ScrollPosition, VoidCallback> _positionToListener = <ScrollPosition, VoidCallback>{};
   ScrollPosition? _lastUpdated;

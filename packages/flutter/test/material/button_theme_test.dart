@@ -242,7 +242,7 @@ void main() {
                 return Container(
                   alignment: Alignment.center,
                   child: DropdownButtonHideUnderline(
-                    child: Container(
+                    child: SizedBox(
                       width: 200.0,
                       child: DropdownButton<String>(
                         key: dropdownKey,
@@ -361,9 +361,9 @@ void main() {
               ),
               textTheme: ButtonTextTheme.primary,
               child: FlatButton(
-                child: const Text('FlatButton'),
                 onPressed: () {},
                 focusNode: focusNode,
+                child: const Text('FlatButton'),
               ),
             ),
           ),
@@ -400,6 +400,5 @@ void main() {
     await tester.pump(const Duration(milliseconds: 800)); // Wait for splash and highlight to be well under way.
     expect(textColor(), pressedColor);
   },
-    semanticsEnabled: true,
   );
 }

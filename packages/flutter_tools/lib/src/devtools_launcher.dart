@@ -2,89 +2,55 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// @dart = 2.8
+
 import 'dart:async';
 
-import 'package:http/http.dart' as http;
 import 'package:meta/meta.dart';
 import 'package:process/process.dart';
 
 import 'base/io.dart' as io;
 import 'base/logger.dart';
-import 'base/platform.dart';
 import 'convert.dart';
-import 'persistent_tool_state.dart';
 import 'resident_runner.dart';
 
-/// An implementation of the devtools launcher that uses the server package.
-///
-/// This is implemented in isolated to prevent the flutter_tool from needing
-/// a devtools dep in google3.
+/// An implementation of the devtools launcher that uses `pub global activate` to
+/// start a server instance.
 class DevtoolsServerLauncher extends DevtoolsLauncher {
   DevtoolsServerLauncher({
-    @required Platform platform,
     @required ProcessManager processManager,
-    @required String pubExecutable,
+    @required String dartExecutable,
     @required Logger logger,
-    @required PersistentToolState persistentToolState,
   })  : _processManager = processManager,
-        _pubExecutable = pubExecutable,
-        _logger = logger,
-        _platform = platform,
-        _persistentToolState = persistentToolState;
+        _dartExecutable = dartExecutable,
+        _logger = logger;
 
   final ProcessManager _processManager;
-  final String _pubExecutable;
+  final String _dartExecutable;
   final Logger _logger;
-  final Platform _platform;
-  final PersistentToolState _persistentToolState;
+  final Completer<void> _processStartCompleter = Completer<void>();
 
   io.Process _devToolsProcess;
 
   static final RegExp _serveDevToolsPattern =
-      RegExp(r'Serving DevTools at ((http|//)[a-zA-Z0-9:/=_\-\.\[\]]+)');
+      RegExp(r'Serving DevTools at ((http|//)[a-zA-Z0-9:/=_\-\.\[\]]+?)\.?$');
 
   @override
-  Future<void> launch(Uri vmServiceUri) async {
+  Future<void> get processStart => _processStartCompleter.future;
+
+  @override
+  Future<void> launch(Uri vmServiceUri, {List<String> additionalArguments}) async {
     // Place this entire method in a try/catch that swallows exceptions because
-    // we do not want to block Flutter run/attach operations on a DevTools
-    // failure.
+    // this method is guaranteed not to return a Future that throws.
     try {
-      bool offline = false;
-      try {
-        const String pubHostedUrlKey = 'PUB_HOSTED_URL';
-        if (_platform.environment.containsKey(pubHostedUrlKey)) {
-          await http.head(Uri.parse(_platform.environment[pubHostedUrlKey]));
-        } else {
-          await http.head(Uri.https('pub.dev', ''));
-        }
-      } on Exception {
-        offline = true;
-      }
-
-      if (offline) {
-        // TODO(kenz): we should launch an already activated version of DevTools
-        // here, if available, once DevTools has offline support. DevTools does
-        // not work without internet currently due to the failed request of a
-        // couple scripts. See https://github.com/flutter/devtools/issues/2420.
-        return;
-      } else {
-        final bool didActivateDevTools = await _activateDevTools();
-        final bool devToolsActive = await _checkForActiveDevTools();
-        if (!didActivateDevTools && !devToolsActive) {
-          // At this point, we failed to activate the DevTools package and the
-          // package is not already active.
-          return;
-        }
-      }
-
       _devToolsProcess = await _processManager.start(<String>[
-        _pubExecutable,
-        'global',
-        'run',
+        _dartExecutable,
         'devtools',
         '--no-launch-browser',
         if (vmServiceUri != null) '--vm-uri=$vmServiceUri',
+        ...?additionalArguments,
       ]);
+      _processStartCompleter.complete();
       final Completer<Uri> completer = Completer<Uri>();
       _devToolsProcess.stdout
           .transform(utf8.decoder)
@@ -92,28 +58,21 @@ class DevtoolsServerLauncher extends DevtoolsLauncher {
           .listen((String line) {
             final Match match = _serveDevToolsPattern.firstMatch(line);
             if (match != null) {
-              // We are trying to pull "http://127.0.0.1:9101" from "Serving
-              // DevTools at http://127.0.0.1:9101.". `match[1]` will return
-              // "http://127.0.0.1:9101.", and we need to trim the trailing period
-              // so that we don't throw an exception from `Uri.parse`.
-              String uri = match[1];
-              if (uri.endsWith('.')) {
-                uri = uri.substring(0, uri.length - 1);
-              }
-              completer.complete(Uri.parse(uri));
+              final String url = match[1];
+              completer.complete(Uri.parse(url));
             }
          });
       _devToolsProcess.stderr
           .transform(utf8.decoder)
           .transform(const LineSplitter())
           .listen(_logger.printError);
-      devToolsUri = await completer.future
-        .timeout(const Duration(seconds: 10));
+      devToolsUrl = await completer.future;
     } on Exception catch (e, st) {
       _logger.printError('Failed to launch DevTools: $e', stackTrace: st);
     }
   }
 
+<<<<<<< HEAD
   Future<bool> _checkForActiveDevTools() async {
     // We are offline, and cannot activate DevTools, so check if the DevTools
     // package is already active.
@@ -169,6 +128,8 @@ class DevtoolsServerLauncher extends DevtoolsLauncher {
     }
   }
 
+=======
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
   @override
   Future<DevToolsServerAddress> serve() async {
     if (activeDevToolsServer == null) {
@@ -179,7 +140,9 @@ class DevtoolsServerLauncher extends DevtoolsLauncher {
 
   @override
   Future<void> close() async {
-    devToolsUri = null;
+    if (devToolsUrl != null) {
+      devToolsUrl = null;
+    }
     if (_devToolsProcess != null) {
       _devToolsProcess.kill();
       await _devToolsProcess.exitCode;

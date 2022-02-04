@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-
 import 'package:file/file.dart';
 import 'package:flutter_tools/src/base/file_system.dart';
 
@@ -32,8 +31,13 @@ class TestsProject extends Project {
   import 'package:flutter_test/flutter_test.dart';
 
   void main() {
-    testWidgets('Hello world test', (WidgetTester tester) async {
-      expect(true, isTrue); // BREAKPOINT
+    group('Flutter tests', () {
+      testWidgets('can pass', (WidgetTester tester) async {
+        expect(true, isTrue); // BREAKPOINT
+      });
+      testWidgets('can fail', (WidgetTester tester) async {
+        expect(true, isFalse);
+      });
     });
   }
   ''';

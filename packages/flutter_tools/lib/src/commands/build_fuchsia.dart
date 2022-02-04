@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// @dart = 2.8
+
 import 'package:meta/meta.dart';
 
 import '../base/common.dart';
@@ -17,7 +19,9 @@ import 'build.dart';
 
 /// A command to build a Fuchsia target.
 class BuildFuchsiaCommand extends BuildSubCommand {
-  BuildFuchsiaCommand({ @required bool verboseHelp }) {
+  BuildFuchsiaCommand({
+    @required bool verboseHelp,
+  }) : super(verboseHelp: verboseHelp) {
     addTreeShakeIconsFlag();
     usesTargetOption();
     usesDartDefineOption();
@@ -57,6 +61,9 @@ class BuildFuchsiaCommand extends BuildSubCommand {
   String get description => 'Build the Fuchsia target (Experimental).';
 
   @override
+  bool get supported => globals.platform.isLinux || globals.platform.isMacOS;
+
+  @override
   Future<FlutterCommandResult> runCommand() async {
     if (!featureFlags.isFuchsiaEnabled) {
       throwToolExit(
@@ -66,7 +73,7 @@ class BuildFuchsiaCommand extends BuildSubCommand {
     }
     final BuildInfo buildInfo = await getBuildInfo();
     final FlutterProject flutterProject = FlutterProject.current();
-    if (!globals.platform.isLinux && !globals.platform.isMacOS) {
+    if (!supported) {
       throwToolExit('"build fuchsia" is only supported on Linux and MacOS hosts.');
     }
     if (!flutterProject.fuchsia.existsSync()) {

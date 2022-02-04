@@ -67,7 +67,6 @@ class ColorItem extends StatelessWidget {
           bottom: false,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               Text('$prefix$index'),
               Text(colorString()),
@@ -120,6 +119,8 @@ class PaletteTabView extends StatelessWidget {
 }
 
 class ColorsDemo extends StatelessWidget {
+  const ColorsDemo({Key? key}) : super(key: key);
+
   static const String routeName = '/colors';
 
   @override

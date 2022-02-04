@@ -4,10 +4,8 @@
 
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
-import 'button_bar.dart';
 import 'colors.dart';
 import 'debug.dart';
 import 'dialog_theme.dart';
@@ -49,6 +47,7 @@ class Dialog extends StatelessWidget {
     this.insetPadding = _defaultInsetPadding,
     this.clipBehavior = Clip.none,
     this.shape,
+    this.alignment,
     this.child,
   }) : assert(clipBehavior != null),
        super(key: key);
@@ -116,6 +115,14 @@ class Dialog extends StatelessWidget {
   /// {@endtemplate}
   final ShapeBorder? shape;
 
+  /// {@template flutter.material.dialog.alignment}
+  /// How to align the [Dialog].
+  ///
+  /// If null, then [DialogTheme.alignment] is used. If that is also null, the
+  /// default is [Alignment.center].
+  /// {@endtemplate}
+  final AlignmentGeometry? alignment;
+
   /// The widget below this widget in the tree.
   ///
   /// {@macro flutter.widgets.ProxyWidget.child}
@@ -139,7 +146,8 @@ class Dialog extends StatelessWidget {
         removeRight: true,
         removeBottom: true,
         context: context,
-        child: Center(
+        child: Align(
+          alignment: alignment ?? dialogTheme.alignment ?? Alignment.center,
           child: ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 280.0),
             child: Material(
@@ -195,10 +203,10 @@ class Dialog extends StatelessWidget {
 ///     barrierDismissible: false, // user must tap button!
 ///     builder: (BuildContext context) {
 ///       return AlertDialog(
-///         title: Text('AlertDialog Title'),
+///         title: const Text('AlertDialog Title'),
 ///         content: SingleChildScrollView(
 ///           child: ListBody(
-///             children: <Widget>[
+///             children: const <Widget>[
 ///               Text('This is a demo alert dialog.'),
 ///               Text('Would you like to approve of this message?'),
 ///             ],
@@ -206,7 +214,7 @@ class Dialog extends StatelessWidget {
 ///         ),
 ///         actions: <Widget>[
 ///           TextButton(
-///             child: Text('Approve'),
+///             child: const Text('Approve'),
 ///             onPressed: () {
 ///               Navigator.of(context).pop();
 ///             },
@@ -217,6 +225,14 @@ class Dialog extends StatelessWidget {
 ///   );
 /// }
 /// ```
+/// {@end-tool}
+///
+/// {@tool dartpad}
+/// This demo shows a [TextButton] which when pressed, calls [showDialog]. When called, this method
+/// displays a Material dialog above the current contents of the app and returns
+/// a [Future] that completes when the dialog is dismissed.
+///
+/// ** See code in examples/api/lib/material/dialog/alert_dialog.1.dart **
 /// {@end-tool}
 ///
 /// See also:
@@ -244,6 +260,7 @@ class AlertDialog extends StatelessWidget {
     this.contentTextStyle,
     this.actions,
     this.actionsPadding = EdgeInsets.zero,
+    this.actionsAlignment,
     this.actionsOverflowDirection,
     this.actionsOverflowButtonSpacing,
     this.buttonPadding,
@@ -253,6 +270,7 @@ class AlertDialog extends StatelessWidget {
     this.insetPadding = _defaultInsetPadding,
     this.clipBehavior = Clip.none,
     this.shape,
+    this.alignment,
     this.scrollable = false,
   }) : assert(contentPadding != null),
        assert(clipBehavior != null),
@@ -306,18 +324,15 @@ class AlertDialog extends StatelessWidget {
   final TextStyle? contentTextStyle;
 
   /// The (optional) set of actions that are displayed at the bottom of the
-  /// dialog.
+  /// dialog with an [OverflowBar].
   ///
   /// Typically this is a list of [TextButton] widgets. It is recommended to
   /// set the [Text.textAlign] to [TextAlign.end] for the [Text] within the
   /// [TextButton], so that buttons whose labels wrap to an extra line align
-  /// with the overall [ButtonBar]'s alignment within the dialog.
-  ///
-  /// These widgets will be wrapped in a [ButtonBar], which introduces 8 pixels
-  /// of padding on each side.
+  /// with the overall [OverflowBar]'s alignment within the dialog.
   ///
   /// If the [title] is not null but the [content] _is_ null, then an extra 20
-  /// pixels of padding is added above the [ButtonBar] to separate the [title]
+  /// pixels of padding is added above the [OverflowBar] to separate the [title]
   /// from the [actions].
   final List<Widget>? actions;
 
@@ -335,21 +350,30 @@ class AlertDialog extends StatelessWidget {
   /// This is an example of a set of actions aligned with the content widget.
   /// ```dart
   /// AlertDialog(
-  ///   title: Text('Title'),
+  ///   title: const Text('Title'),
   ///   content: Container(width: 200, height: 200, color: Colors.green),
   ///   actions: <Widget>[
-  ///     ElevatedButton(onPressed: () {}, child: Text('Button 1')),
-  ///     ElevatedButton(onPressed: () {}, child: Text('Button 2')),
+  ///     ElevatedButton(onPressed: () {}, child: const Text('Button 1')),
+  ///     ElevatedButton(onPressed: () {}, child: const Text('Button 2')),
   ///   ],
-  ///   actionsPadding: EdgeInsets.symmetric(horizontal: 8.0),
+  ///   actionsPadding: const EdgeInsets.symmetric(horizontal: 8.0),
   /// )
   /// ```
   /// {@end-tool}
   ///
   /// See also:
   ///
-  /// * [ButtonBar], which [actions] configures to lay itself out.
+  /// * [OverflowBar], which [actions] configures to lay itself out.
   final EdgeInsetsGeometry actionsPadding;
+
+  /// Defines the horizontal layout of the [actions] according to the same
+  /// rules as for [Row.mainAxisAlignment].
+  ///
+  /// This parameter is passed along to the dialog's [OverflowBar].
+  ///
+  /// If this parameter is null (the default) then [MainAxisAlignment.end]
+  /// is used.
+  final MainAxisAlignment? actionsAlignment;
 
   /// The vertical direction of [actions] if the children overflow
   /// horizontally.
@@ -362,16 +386,13 @@ class AlertDialog extends StatelessWidget {
   /// property is set to [VerticalDirection.up], since it "starts" at the
   /// bottom and "ends" at the top.
   ///
-  /// If null then it will use the surrounding
-  /// [ButtonBarThemeData.overflowDirection]. If that is null, it will
-  /// default to [VerticalDirection.down].
-  ///
   /// See also:
   ///
-  /// * [ButtonBar], which [actions] configures to lay itself out.
+  /// * [OverflowBar], which [actions] configures to lay itself out.
   final VerticalDirection? actionsOverflowDirection;
 
-  /// The spacing between [actions] when the button bar overflows.
+  /// The spacing between [actions] when the [OverflowBar] switches
+  /// to a column layout because the actions don't fit horizontally.
   ///
   /// If the widgets in [actions] do not fit into a single row, they are
   /// arranged into a column. This parameter provides additional
@@ -392,13 +413,8 @@ class AlertDialog extends StatelessWidget {
   /// This is different from [actionsPadding], which defines the padding
   /// between the entire button bar and the edges of the dialog.
   ///
-  /// If this property is null, then it will use the surrounding
-  /// [ButtonBarThemeData.buttonPadding]. If that is null, it will default to
+  /// If this property is null, then it will default to
   /// 8.0 logical pixels on the left and right.
-  ///
-  /// See also:
-  ///
-  /// * [ButtonBar], which [actions] configures to lay itself out.
   final EdgeInsetsGeometry? buttonPadding;
 
   /// {@macro flutter.material.dialog.backgroundColor}
@@ -432,6 +448,9 @@ class AlertDialog extends StatelessWidget {
   /// {@macro flutter.material.dialog.shape}
   final ShapeBorder? shape;
 
+  /// {@macro flutter.material.dialog.shape}
+  final AlignmentGeometry? alignment;
+
   /// Determines whether the [title] and [content] widgets are wrapped in a
   /// scrollable.
   ///
@@ -439,13 +458,6 @@ class AlertDialog extends StatelessWidget {
   /// to overflow. Both [title] and [content] are wrapped in a scroll view,
   /// allowing all overflowed content to be visible while still showing the
   /// button bar.
-  @Deprecated(
-    'Set scrollable to `true`. This parameter will be removed and '
-    'was introduced to migrate AlertDialog to be scrollable by '
-    'default. For more information, see '
-    'https://flutter.dev/docs/release/breaking-changes/scrollable_alert_dialog. '
-    'This feature was deprecated after v1.13.2.'
-  )
   final bool scrollable;
 
   @override
@@ -487,9 +499,11 @@ class AlertDialog extends StatelessWidget {
         child: DefaultTextStyle(
           style: titleTextStyle ?? dialogTheme.titleTextStyle ?? theme.textTheme.headline6!,
           child: Semantics(
-            child: title,
-            namesRoute: label == null,
+            // For iOS platform, the focus always lands on the title.
+            // Set nameRoute to false to avoid title being announce twice.
+            namesRoute: label == null && theme.platform != TargetPlatform.iOS,
             container: true,
+            child: title,
           ),
         ),
       );
@@ -506,19 +520,24 @@ class AlertDialog extends StatelessWidget {
         ),
         child: DefaultTextStyle(
           style: contentTextStyle ?? dialogTheme.contentTextStyle ?? theme.textTheme.subtitle1!,
-          child: content!,
+          child: Semantics(
+            container: true,
+            child: content,
+          ),
         ),
       );
     }
 
-
     if (actions != null) {
+      final double spacing = (buttonPadding?.horizontal ?? 16) / 2;
       actionsWidget = Padding(
-        padding: actionsPadding,
-        child: ButtonBar(
-          buttonPadding: buttonPadding,
-          overflowDirection: actionsOverflowDirection,
-          overflowButtonSpacing: actionsOverflowButtonSpacing,
+        padding: actionsPadding.add(EdgeInsets.all(spacing)),
+        child: OverflowBar(
+          alignment: actionsAlignment ?? MainAxisAlignment.end,
+          spacing: spacing,
+          overflowAlignment: OverflowBarAlignment.end,
+          overflowDirection: actionsOverflowDirection ?? VerticalDirection.down,
+          overflowSpacing: actionsOverflowButtonSpacing ?? 0,
           children: actions!,
         ),
       );
@@ -574,6 +593,7 @@ class AlertDialog extends StatelessWidget {
       insetPadding: insetPadding,
       clipBehavior: clipBehavior,
       shape: shape,
+      alignment: alignment,
       child: dialogChild,
     );
   }
@@ -739,6 +759,7 @@ class SimpleDialog extends StatelessWidget {
     this.insetPadding = _defaultInsetPadding,
     this.clipBehavior = Clip.none,
     this.shape,
+    this.alignment,
   }) : assert(titlePadding != null),
        assert(contentPadding != null),
        super(key: key);
@@ -815,23 +836,24 @@ class SimpleDialog extends StatelessWidget {
   /// {@macro flutter.material.dialog.shape}
   final ShapeBorder? shape;
 
+  /// {@macro flutter.material.dialog.shape}
+  final AlignmentGeometry? alignment;
+
   @override
   Widget build(BuildContext context) {
     assert(debugCheckHasMaterialLocalizations(context));
     final ThemeData theme = Theme.of(context);
 
     String? label = semanticLabel;
-    if (title == null) {
-      switch (theme.platform) {
-        case TargetPlatform.macOS:
-        case TargetPlatform.iOS:
-          break;
-        case TargetPlatform.android:
-        case TargetPlatform.fuchsia:
-        case TargetPlatform.linux:
-        case TargetPlatform.windows:
-          label = semanticLabel ?? MaterialLocalizations.of(context).dialogLabel;
-      }
+    switch (theme.platform) {
+      case TargetPlatform.macOS:
+      case TargetPlatform.iOS:
+        break;
+      case TargetPlatform.android:
+      case TargetPlatform.fuchsia:
+      case TargetPlatform.linux:
+      case TargetPlatform.windows:
+        label ??= MaterialLocalizations.of(context).dialogLabel;
     }
 
     // The paddingScaleFactor is used to adjust the padding of Dialog
@@ -851,7 +873,13 @@ class SimpleDialog extends StatelessWidget {
         ),
         child: DefaultTextStyle(
           style: titleTextStyle ?? DialogTheme.of(context).titleTextStyle ?? theme.textTheme.headline6!,
-          child: Semantics(namesRoute: label == null, child: title),
+          child: Semantics(
+            // For iOS platform, the focus always lands on the title.
+            // Set nameRoute to false to avoid title being announce twice.
+            namesRoute: label == null && theme.platform != TargetPlatform.iOS,
+            container: true,
+            child: title,
+          ),
         ),
       );
     }
@@ -901,6 +929,7 @@ class SimpleDialog extends StatelessWidget {
       insetPadding: insetPadding,
       clipBehavior: clipBehavior,
       shape: shape,
+      alignment: alignment,
       child: dialogChild,
     );
   }
@@ -925,8 +954,6 @@ Widget _buildMaterialDialogTransitions(BuildContext context, Animation<double> a
 /// returned by the `builder` does not share a context with the location that
 /// `showDialog` is originally called from. Use a [StatefulBuilder] or a
 /// custom [StatefulWidget] if the dialog needs to update dynamically.
-///
-/// The `child` argument is deprecated, and should be replaced with `builder`.
 ///
 /// The `context` argument is used to look up the [Navigator] and [Theme] for
 /// the dialog. It is only used when the method is called. Its corresponding
@@ -968,8 +995,7 @@ Widget _buildMaterialDialogTransitions(BuildContext context, Animation<double> a
 ///
 /// For more information about state restoration, see [RestorationManager].
 ///
-/// {@tool sample --template=freeform}
-///
+/// {@tool sample}
 /// This sample demonstrates how to create a restorable Material dialog. This is
 /// accomplished by enabling state restoration by specifying
 /// [MaterialApp.restorationScopeId] and using [Navigator.restorablePush] to
@@ -977,50 +1003,7 @@ Widget _buildMaterialDialogTransitions(BuildContext context, Animation<double> a
 ///
 /// {@macro flutter.widgets.RestorationManager}
 ///
-/// ```dart imports
-/// import 'package:flutter/material.dart';
-/// ```
-///
-/// ```dart
-/// void main() {
-///   runApp(MyApp());
-/// }
-///
-/// class MyApp extends StatelessWidget {
-///   @override
-///   Widget build(BuildContext context) {
-///     return MaterialApp(
-///       restorationScopeId: 'app',
-///       title: 'Restorable Routes Demo',
-///       home: MyHomePage(),
-///     );
-///   }
-/// }
-///
-/// class MyHomePage extends StatelessWidget {
-///   static Route<Object?> _dialogBuilder(BuildContext context, Object? arguments) {
-///     return DialogRoute<void>(
-///       context: context,
-///       builder: (BuildContext context) => const AlertDialog(title: Text('Material Alert!')),
-///     );
-///   }
-///
-///   @override
-///   Widget build(BuildContext context) {
-///     return Scaffold(
-///       body: Center(
-///         child: OutlinedButton(
-///           onPressed: () {
-///             Navigator.of(context).restorablePush(_dialogBuilder);
-///           },
-///           child: const Text('Open Dialog'),
-///         ),
-///       ),
-///     );
-///   }
-/// }
-/// ```
-///
+/// ** See code in examples/api/lib/material/dialog/show_dialog.0.dart **
 /// {@end-tool}
 ///
 /// See also:
@@ -1141,7 +1124,7 @@ class DialogRoute<T> extends RawDialogRoute<T> {
 }
 
 double _paddingScaleFactor(double textScaleFactor) {
-  final double clampedTextScaleFactor = textScaleFactor.clamp(1.0, 2.0).toDouble();
+  final double clampedTextScaleFactor = textScaleFactor.clamp(1.0, 2.0);
   // The final padding scale factor is clamped between 1/3 and 1. For example,
   // a non-scaled padding of 24 will produce a padding between 24 and 8.
   return lerpDouble(1.0, 1.0 / 3.0, clampedTextScaleFactor - 1.0)!;

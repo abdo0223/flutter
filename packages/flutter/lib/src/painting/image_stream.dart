@@ -98,6 +98,9 @@ class ImageInfo {
   /// the image.
   final ui.Image image;
 
+  /// The size of raw image pixels in bytes.
+  int get sizeBytes => image.height * image.width * 4;
+
   /// The linear scale factor for drawing this image at its intended size.
   ///
   /// The scale factor applies to the width and the height.
@@ -194,6 +197,15 @@ class ImageStreamListener {
   ///
   /// If an error occurs during loading, [onError] will be called instead of
   /// [onImage].
+  ///
+  /// If [onError] is called and does not throw, then the error is considered to
+  /// be handled. An error handler can explicitly rethrow the exception reported
+  /// to it to safely indicate that it did not handle the exception.
+  ///
+  /// If an image stream has no listeners that handled the error when the error
+  /// was first encountered, then the error is reported using
+  /// [FlutterError.reportError], with the [FlutterErrorDetails.silent] flag set
+  /// to true.
   final ImageErrorListener? onError;
 
   @override
@@ -504,15 +516,17 @@ abstract class ImageStreamCompleter with Diagnosticable {
     if (_currentError != null && listener.onError != null) {
       try {
         listener.onError!(_currentError!.exception, _currentError!.stack);
-      } catch (exception, stack) {
-        FlutterError.reportError(
-          FlutterErrorDetails(
-            exception: exception,
-            library: 'image resource service',
-            context: ErrorDescription('by a synchronously-called image error listener'),
-            stack: stack,
-          ),
-        );
+      } catch (newException, newStack) {
+        if (newException != _currentError!.exception) {
+          FlutterError.reportError(
+            FlutterErrorDetails(
+              exception: newException,
+              library: 'image resource service',
+              context: ErrorDescription('by a synchronously-called image error listener'),
+              stack: newStack,
+            ),
+          );
+        }
       }
     }
   }
@@ -557,6 +571,8 @@ abstract class ImageStreamCompleter with Diagnosticable {
   }
 
   bool _disposed = false;
+
+  @mustCallSuper
   void _maybeDispose() {
     if (!_hadAtLeastOneListener || _disposed || _listeners.isNotEmpty || _keepAliveHandles != 0) {
       return;
@@ -603,6 +619,7 @@ abstract class ImageStreamCompleter with Diagnosticable {
 
   /// Calls all the registered listeners to notify them of a new image.
   @protected
+  @pragma('vm:notify-debugger-on-exception')
   void setImage(ImageInfo image) {
     _checkDisposed();
     _currentImage?.dispose();
@@ -612,7 +629,7 @@ abstract class ImageStreamCompleter with Diagnosticable {
       return;
     // Make a copy to allow for concurrent modification.
     final List<ImageStreamListener> localListeners =
-        List<ImageStreamListener>.from(_listeners);
+        List<ImageStreamListener>.of(_listeners);
     for (final ImageStreamListener listener in localListeners) {
       try {
         listener.onImage(image.clone(), false);
@@ -630,7 +647,9 @@ abstract class ImageStreamCompleter with Diagnosticable {
   /// occurred while resolving the image.
   ///
   /// If no error listeners (listeners with an [ImageStreamListener.onError]
-  /// specified) are attached, a [FlutterError] will be reported instead.
+  /// specified) are attached, or if the handlers all rethrow the exception
+  /// verbatim (with `throw exception`), a [FlutterError] will be reported using
+  /// [FlutterError.reportError].
   ///
   /// The `context` should be a string describing where the error was caught, in
   /// a form that will make sense in English when following the word "thrown",
@@ -654,7 +673,7 @@ abstract class ImageStreamCompleter with Diagnosticable {
   /// messages, but errors during development will still be reported.
   ///
   /// See [FlutterErrorDetails] for further details on these values.
-  @protected
+  @pragma('vm:notify-debugger-on-exception')
   void reportError({
     DiagnosticsNode? context,
     required Object exception,
@@ -677,23 +696,26 @@ abstract class ImageStreamCompleter with Diagnosticable {
         .whereType<ImageErrorListener>()
         .toList();
 
-    if (localErrorListeners.isEmpty) {
-      FlutterError.reportError(_currentError!);
-    } else {
-      for (final ImageErrorListener errorListener in localErrorListeners) {
-        try {
-          errorListener(exception, stack);
-        } catch (exception, stack) {
+    bool handled = false;
+    for (final ImageErrorListener errorListener in localErrorListeners) {
+      try {
+        errorListener(exception, stack);
+        handled = true;
+      } catch (newException, newStack) {
+        if (newException != exception) {
           FlutterError.reportError(
             FlutterErrorDetails(
               context: ErrorDescription('when reporting an error to an image listener'),
               library: 'image resource service',
-              exception: exception,
-              stack: stack,
+              exception: newException,
+              stack: newStack,
             ),
           );
         }
       }
+    }
+    if (!handled) {
+      FlutterError.reportError(_currentError!);
     }
   }
 
@@ -701,7 +723,7 @@ abstract class ImageStreamCompleter with Diagnosticable {
   /// [ImageStreamListener.onChunk] specified) to notify them of a new
   /// [ImageChunkEvent].
   @protected
-  void reportImageChunkEvent(ImageChunkEvent event){
+  void reportImageChunkEvent(ImageChunkEvent event) {
     _checkDisposed();
     if (hasListeners) {
       // Make a copy to allow for concurrent modification.
@@ -831,7 +853,7 @@ class MultiFrameImageStreamCompleter extends ImageStreamCompleter {
       );
     });
     if (chunkEvents != null) {
-      chunkEvents.listen(reportImageChunkEvent,
+      _chunkSubscription = chunkEvents.listen(reportImageChunkEvent,
         onError: (Object error, StackTrace stack) {
           reportError(
             context: ErrorDescription('loading an image'),
@@ -845,6 +867,7 @@ class MultiFrameImageStreamCompleter extends ImageStreamCompleter {
     }
   }
 
+  StreamSubscription<ImageChunkEvent>? _chunkSubscription;
   ui.Codec? _codec;
   final double _scale;
   final InformationCollector? _informationCollector;
@@ -957,7 +980,7 @@ class MultiFrameImageStreamCompleter extends ImageStreamCompleter {
 
   @override
   void addListener(ImageStreamListener listener) {
-    if (!hasListeners && _codec != null)
+    if (!hasListeners && _codec != null && (_currentImage == null || _codec!.frameCount > 1))
       _decodeNextFrameAndSchedule();
     super.addListener(listener);
   }
@@ -968,6 +991,16 @@ class MultiFrameImageStreamCompleter extends ImageStreamCompleter {
     if (!hasListeners) {
       _timer?.cancel();
       _timer = null;
+    }
+  }
+
+  @override
+  void _maybeDispose() {
+    super._maybeDispose();
+    if (_disposed) {
+      _chunkSubscription?.onData(null);
+      _chunkSubscription?.cancel();
+      _chunkSubscription = null;
     }
   }
 }

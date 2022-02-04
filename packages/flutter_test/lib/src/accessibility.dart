@@ -8,7 +8,6 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/rendering.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter/widgets.dart';
 
 import 'finders.dart';
@@ -95,6 +94,9 @@ class MinimumTapTargetGuideline extends AccessibilityGuideline {
       if ((!data.hasAction(ui.SemanticsAction.longPress)
         && !data.hasAction(ui.SemanticsAction.tap))
         || data.hasFlag(ui.SemanticsFlag.isHidden))
+        return result;
+      // Skip links https://www.w3.org/WAI/WCAG21/Understanding/target-size.html
+      if (data.hasFlag(ui.SemanticsFlag.isLink))
         return result;
       Rect paintBounds = node.rect;
       SemanticsNode? current = node;
@@ -210,7 +212,10 @@ class MinimumTextContrastGuideline extends AccessibilityGuideline {
 
     Future<Evaluation> evaluateNode(SemanticsNode node) async {
       Evaluation result = const Evaluation.pass();
-      if (node.isInvisible || node.isMergedIntoParent || node.hasFlag(ui.SemanticsFlag.isHidden))
+      if (node.isInvisible ||
+          node.isMergedIntoParent ||
+          node.hasFlag(ui.SemanticsFlag.isHidden) ||
+          (node.hasFlag(ui.SemanticsFlag.hasEnabledState) && !node.hasFlag(ui.SemanticsFlag.isEnabled)))
         return result;
       final SemanticsData data = node.getSemanticsData();
       final List<SemanticsNode> children = <SemanticsNode>[];
@@ -437,7 +442,7 @@ class _ContrastReport {
   ///
   /// Given a list of integers [colors], each representing the color of a pixel
   /// on a part of the screen, generates a contrast ratio report.
-  /// Each colors is given in in ARGB format, as is the parameter for the
+  /// Each colors is given in ARGB format, as is the parameter for the
   /// constructor [Color].
   ///
   /// The contrast ratio of the most frequent light color and the most

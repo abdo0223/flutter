@@ -4,9 +4,7 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/widgets.dart';
 
 const String text = 'Hello World! How are you? Life is good!';
 const String alternativeText = 'Everything is awesome!!';
@@ -102,7 +100,6 @@ class TestWidgetState extends State<TestWidget> with RestorationMixin {
   Widget build(BuildContext context) {
     return Material(
       child: Align(
-        alignment: Alignment.center,
         child: SizedBox(
           width: 50,
           child: CupertinoTextField(

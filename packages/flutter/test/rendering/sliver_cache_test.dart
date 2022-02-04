@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 import 'package:flutter/rendering.dart';
-import '../flutter_test_alternative.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import 'rendering_tester.dart';
 
@@ -18,7 +18,6 @@ void main() {
     // Viewport is 800x600, can show 6 children at a time.
 
     final RenderViewport root = RenderViewport(
-      axisDirection: AxisDirection.down,
       crossAxisDirection: AxisDirection.right,
       offset: ViewportOffset.zero(),
       cacheExtent: 250.0,
@@ -289,7 +288,6 @@ void main() {
     );
     RenderSliverFixedExtentList inner;
     final RenderViewport root = RenderViewport(
-      axisDirection: AxisDirection.down,
       crossAxisDirection: AxisDirection.right,
       offset: ViewportOffset.zero(),
       cacheExtent: 250.0,
@@ -389,7 +387,6 @@ void main() {
     );
     RenderSliverList inner;
     final RenderViewport root = RenderViewport(
-      axisDirection: AxisDirection.down,
       crossAxisDirection: AxisDirection.right,
       offset: ViewportOffset.zero(),
       cacheExtent: 250.0,
@@ -489,7 +486,6 @@ void main() {
     );
     RenderSliverGrid inner;
     final RenderViewport root = RenderViewport(
-      axisDirection: AxisDirection.down,
       crossAxisDirection: AxisDirection.right,
       offset: ViewportOffset.zero(),
       cacheExtent: 250.0,
@@ -597,7 +593,6 @@ void main() {
 
 
     final RenderViewport root = RenderViewport(
-      axisDirection: AxisDirection.down,
       crossAxisDirection: AxisDirection.right,
       offset: ViewportOffset.zero(),
       cacheExtent: 250.0,

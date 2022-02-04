@@ -4,7 +4,6 @@
 
 import 'dart:ui';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -23,18 +22,15 @@ void main() {
           textDirection: TextDirection.ltr,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
                   ),
                 ),
               );
@@ -80,18 +76,15 @@ void main() {
           textDirection: TextDirection.rtl,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
                   ),
                 ),
               );
@@ -137,21 +130,17 @@ void main() {
           textDirection: TextDirection.ltr,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      min: 0.0,
-                      max: 100.0,
-                      divisions: 10,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    max: 100.0,
+                    divisions: 10,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
                   ),
                 ),
               );
@@ -199,21 +188,17 @@ void main() {
           textDirection: TextDirection.rtl,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      min: 0,
-                      max: 100,
-                      divisions: 10,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    max: 100,
+                    divisions: 10,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
                   ),
                 ),
               );
@@ -261,18 +246,15 @@ void main() {
           textDirection: TextDirection.ltr,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
                   ),
                 ),
               );
@@ -308,18 +290,15 @@ void main() {
           textDirection: TextDirection.rtl,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
                   ),
                 ),
               );
@@ -355,21 +334,17 @@ void main() {
           textDirection: TextDirection.ltr,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      min: 0,
-                      max: 100,
-                      divisions: 10,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    max: 100,
+                    divisions: 10,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
                   ),
                 ),
               );
@@ -405,21 +380,17 @@ void main() {
           textDirection: TextDirection.rtl,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      min: 0,
-                      max: 100,
-                      divisions: 10,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    max: 100,
+                    divisions: 10,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
                   ),
                 ),
               );
@@ -455,18 +426,15 @@ void main() {
           textDirection: TextDirection.ltr,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
                   ),
                 ),
               );
@@ -508,18 +476,15 @@ void main() {
           textDirection: TextDirection.rtl,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
                   ),
                 ),
               );
@@ -561,21 +526,17 @@ void main() {
           textDirection: TextDirection.ltr,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      min: 0,
-                      max: 100,
-                      divisions: 10,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    max: 100,
+                    divisions: 10,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
                   ),
                 ),
               );
@@ -617,21 +578,17 @@ void main() {
           textDirection: TextDirection.rtl,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      min: 0,
-                      max: 100,
-                      divisions: 10,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    max: 100,
+                    divisions: 10,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
                   ),
                 ),
               );
@@ -673,18 +630,15 @@ void main() {
           textDirection: TextDirection.ltr,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
                   ),
                 ),
               );
@@ -726,18 +680,15 @@ void main() {
           textDirection: TextDirection.rtl,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
                   ),
                 ),
               );
@@ -779,21 +730,17 @@ void main() {
           textDirection: TextDirection.ltr,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      min: 0,
-                      max: 100,
-                      divisions: 10,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    max: 100,
+                    divisions: 10,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
                   ),
                 ),
               );
@@ -835,21 +782,17 @@ void main() {
           textDirection: TextDirection.rtl,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      min: 0,
-                      max: 100,
-                      divisions: 10,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    max: 100,
+                    divisions: 10,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
                   ),
                 ),
               );
@@ -893,26 +836,22 @@ void main() {
           textDirection: TextDirection.ltr,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      min: 0,
-                      max: 100,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                      onChangeStart: (RangeValues newValues) {
-                        startValues = newValues;
-                      },
-                      onChangeEnd: (RangeValues newValues) {
-                        endValues = newValues;
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    max: 100,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
+                    onChangeStart: (RangeValues newValues) {
+                      startValues = newValues;
+                    },
+                    onChangeEnd: (RangeValues newValues) {
+                      endValues = newValues;
+                    },
                   ),
                 ),
               );
@@ -951,26 +890,22 @@ void main() {
           textDirection: TextDirection.ltr,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: RangeSlider(
-                      values: values,
-                      min: 0,
-                      max: 100,
-                      onChanged: (RangeValues newValues) {
-                        setState(() {
-                          values = newValues;
-                        });
-                      },
-                      onChangeStart: (RangeValues newValues) {
-                        startValues = newValues;
-                      },
-                      onChangeEnd: (RangeValues newValues) {
-                        endValues = newValues;
-                      },
-                    ),
+              return Material(
+                child: Center(
+                  child: RangeSlider(
+                    values: values,
+                    max: 100,
+                    onChanged: (RangeValues newValues) {
+                      setState(() {
+                        values = newValues;
+                      });
+                    },
+                    onChangeStart: (RangeValues newValues) {
+                      startValues = newValues;
+                    },
+                    onChangeEnd: (RangeValues newValues) {
+                      endValues = newValues;
+                    },
                   ),
                 ),
               );
@@ -1040,20 +975,17 @@ void main() {
     return MaterialApp(
       home: Directionality(
         textDirection: TextDirection.ltr,
-        child: MediaQuery(
-          data: MediaQueryData.fromWindow(window),
-          child: Material(
-            child: Center(
-              child: Theme(
-                data: theme,
-                child: RangeSlider(
-                  values: values,
-                  labels: RangeLabels(values.start.toStringAsFixed(2), values.end.toStringAsFixed(2)),
-                  divisions: divisions,
-                  activeColor: activeColor,
-                  inactiveColor: inactiveColor,
-                  onChanged: onChanged,
-                ),
+        child: Material(
+          child: Center(
+            child: Theme(
+              data: theme,
+              child: RangeSlider(
+                values: values,
+                labels: RangeLabels(values.start.toStringAsFixed(2), values.end.toStringAsFixed(2)),
+                divisions: divisions,
+                activeColor: activeColor,
+                inactiveColor: inactiveColor,
+                onChanged: onChanged,
               ),
             ),
           ),
@@ -1071,13 +1003,19 @@ void main() {
     final RenderBox sliderBox = tester.firstRenderObject<RenderBox>(find.byType(RangeSlider));
 
     // Check default theme for enabled widget.
-    expect(sliderBox, paints
-      ..rrect(color: sliderTheme.inactiveTrackColor)
-      ..rect(color: sliderTheme.activeTrackColor)
-      ..rrect(color: sliderTheme.inactiveTrackColor));
-    expect(sliderBox, paints
-      ..circle(color: sliderTheme.thumbColor)
-      ..circle(color: sliderTheme.thumbColor));
+    expect(
+      sliderBox,
+      paints
+        ..rrect(color: sliderTheme.inactiveTrackColor)
+        ..rect(color: sliderTheme.activeTrackColor)
+        ..rrect(color: sliderTheme.inactiveTrackColor),
+    );
+    expect(
+      sliderBox,
+      paints
+        ..circle(color: sliderTheme.thumbColor)
+        ..circle(color: sliderTheme.thumbColor),
+    );
     expect(sliderBox, isNot(paints..circle(color: sliderTheme.disabledThumbColor)));
     expect(sliderBox, isNot(paints..rect(color: sliderTheme.disabledActiveTrackColor)));
     expect(sliderBox, isNot(paints..rect(color: sliderTheme.disabledInactiveTrackColor)));
@@ -1095,16 +1033,18 @@ void main() {
     final RenderBox sliderBox = tester.firstRenderObject<RenderBox>(find.byType(RangeSlider));
 
     expect(
-        sliderBox,
-        paints
-          ..rrect(color: sliderTheme.inactiveTrackColor)
-          ..rect(color: activeColor)
-          ..rrect(color: sliderTheme.inactiveTrackColor));
+      sliderBox,
+      paints
+        ..rrect(color: sliderTheme.inactiveTrackColor)
+        ..rect(color: activeColor)
+        ..rrect(color: sliderTheme.inactiveTrackColor),
+    );
     expect(
-        sliderBox,
-        paints
-          ..circle(color: activeColor)
-          ..circle(color: activeColor));
+      sliderBox,
+      paints
+        ..circle(color: activeColor)
+        ..circle(color: activeColor),
+    );
     expect(sliderBox, isNot(paints..circle(color: sliderTheme.thumbColor)));
     expect(sliderBox, isNot(paints..circle(color: sliderTheme.disabledThumbColor)));
     expect(sliderBox, isNot(paints..rect(color: sliderTheme.disabledActiveTrackColor)));
@@ -1121,16 +1061,18 @@ void main() {
     final RenderBox sliderBox = tester.firstRenderObject<RenderBox>(find.byType(RangeSlider));
 
     expect(
-        sliderBox,
-        paints
-          ..rrect(color: inactiveColor)
-          ..rect(color: sliderTheme.activeTrackColor)
-          ..rrect(color: inactiveColor));
+      sliderBox,
+      paints
+        ..rrect(color: inactiveColor)
+        ..rect(color: sliderTheme.activeTrackColor)
+        ..rrect(color: inactiveColor),
+    );
     expect(
-        sliderBox,
-        paints
-          ..circle(color: sliderTheme.thumbColor)
-          ..circle(color: sliderTheme.thumbColor));
+      sliderBox,
+      paints
+        ..circle(color: sliderTheme.thumbColor)
+        ..circle(color: sliderTheme.thumbColor),
+    );
     expect(sliderBox, isNot(paints..circle(color: sliderTheme.disabledThumbColor)));
     expect(sliderBox, isNot(paints..rect(color: sliderTheme.disabledActiveTrackColor)));
     expect(sliderBox, isNot(paints..rect(color: sliderTheme.disabledInactiveTrackColor)));
@@ -1151,16 +1093,18 @@ void main() {
     final RenderBox sliderBox = tester.firstRenderObject<RenderBox>(find.byType(RangeSlider));
 
     expect(
-        sliderBox,
-        paints
-          ..rrect(color: inactiveColor)
-          ..rect(color: activeColor)
-          ..rrect(color: inactiveColor));
+      sliderBox,
+      paints
+        ..rrect(color: inactiveColor)
+        ..rect(color: activeColor)
+        ..rrect(color: inactiveColor),
+    );
     expect(
-        sliderBox,
-        paints
-          ..circle(color: activeColor)
-          ..circle(color: activeColor));
+      sliderBox,
+      paints
+        ..circle(color: activeColor)
+        ..circle(color: activeColor),
+    );
     expect(sliderBox, isNot(paints..circle(color: sliderTheme.thumbColor)));
     expect(sliderBox, isNot(paints..circle(color: sliderTheme.disabledThumbColor)));
     expect(sliderBox, isNot(paints..rect(color: sliderTheme.disabledActiveTrackColor)));
@@ -1176,20 +1120,22 @@ void main() {
     final RenderBox sliderBox = tester.firstRenderObject<RenderBox>(find.byType(RangeSlider));
 
     expect(
-        sliderBox,
-        paints
-          ..rrect(color: sliderTheme.inactiveTrackColor)
-          ..rect(color: sliderTheme.activeTrackColor)
-          ..rrect(color: sliderTheme.inactiveTrackColor));
+      sliderBox,
+      paints
+        ..rrect(color: sliderTheme.inactiveTrackColor)
+        ..rect(color: sliderTheme.activeTrackColor)
+        ..rrect(color: sliderTheme.inactiveTrackColor),
+    );
     expect(
-        sliderBox,
-        paints
-          ..circle(color: sliderTheme.inactiveTickMarkColor)
-          ..circle(color: sliderTheme.inactiveTickMarkColor)
-          ..circle(color: sliderTheme.activeTickMarkColor)
-          ..circle(color: sliderTheme.inactiveTickMarkColor)
-          ..circle(color: sliderTheme.thumbColor)
-          ..circle(color: sliderTheme.thumbColor));
+      sliderBox,
+      paints
+        ..circle(color: sliderTheme.inactiveTickMarkColor)
+        ..circle(color: sliderTheme.inactiveTickMarkColor)
+        ..circle(color: sliderTheme.activeTickMarkColor)
+        ..circle(color: sliderTheme.inactiveTickMarkColor)
+        ..circle(color: sliderTheme.thumbColor)
+        ..circle(color: sliderTheme.thumbColor),
+    );
     expect(sliderBox, isNot(paints..circle(color: sliderTheme.disabledThumbColor)));
     expect(sliderBox, isNot(paints..rect(color: sliderTheme.disabledActiveTrackColor)));
     expect(sliderBox, isNot(paints..rect(color: sliderTheme.disabledInactiveTrackColor)));
@@ -1212,20 +1158,22 @@ void main() {
     final RenderBox sliderBox = tester.firstRenderObject<RenderBox>(find.byType(RangeSlider));
 
     expect(
-        sliderBox,
-        paints
-          ..rrect(color: inactiveColor)
-          ..rect(color: activeColor)
-          ..rrect(color: inactiveColor));
+      sliderBox,
+      paints
+        ..rrect(color: inactiveColor)
+        ..rect(color: activeColor)
+        ..rrect(color: inactiveColor),
+    );
     expect(
-        sliderBox,
-        paints
-          ..circle(color: activeColor)
-          ..circle(color: activeColor)
-          ..circle(color: inactiveColor)
-          ..circle(color: activeColor)
-          ..circle(color: activeColor)
-          ..circle(color: activeColor));
+      sliderBox,
+      paints
+        ..circle(color: activeColor)
+        ..circle(color: activeColor)
+        ..circle(color: inactiveColor)
+        ..circle(color: activeColor)
+        ..circle(color: activeColor)
+        ..circle(color: activeColor),
+    );
     expect(sliderBox, isNot(paints..circle(color: sliderTheme.thumbColor)));
     expect(sliderBox, isNot(paints..circle(color: sliderTheme.disabledThumbColor)));
     expect(sliderBox, isNot(paints..rect(color: sliderTheme.disabledActiveTrackColor)));
@@ -1243,11 +1191,12 @@ void main() {
     final RenderBox sliderBox = tester.firstRenderObject<RenderBox>(find.byType(RangeSlider));
 
     expect(
-        sliderBox,
-        paints
-          ..rrect(color: sliderTheme.disabledInactiveTrackColor)
-          ..rect(color: sliderTheme.disabledActiveTrackColor)
-          ..rrect(color: sliderTheme.disabledInactiveTrackColor));
+      sliderBox,
+      paints
+        ..rrect(color: sliderTheme.disabledInactiveTrackColor)
+        ..rect(color: sliderTheme.disabledActiveTrackColor)
+        ..rrect(color: sliderTheme.disabledInactiveTrackColor),
+    );
     expect(sliderBox, isNot(paints..circle(color: sliderTheme.thumbColor)));
     expect(sliderBox, isNot(paints..rect(color: sliderTheme.activeTrackColor)));
     expect(sliderBox, isNot(paints..rect(color: sliderTheme.inactiveTrackColor)));
@@ -1269,11 +1218,12 @@ void main() {
     final RenderBox sliderBox = tester.firstRenderObject<RenderBox>(find.byType(RangeSlider));
 
     expect(
-        sliderBox,
-        paints
-          ..rrect(color: sliderTheme.disabledInactiveTrackColor)
-          ..rect(color: sliderTheme.disabledActiveTrackColor)
-          ..rrect(color: sliderTheme.disabledInactiveTrackColor));
+      sliderBox,
+      paints
+        ..rrect(color: sliderTheme.disabledInactiveTrackColor)
+        ..rect(color: sliderTheme.disabledActiveTrackColor)
+        ..rrect(color: sliderTheme.disabledInactiveTrackColor),
+    );
     expect(sliderBox, isNot(paints..circle(color: sliderTheme.thumbColor)));
     expect(sliderBox, isNot(paints..rect(color: sliderTheme.activeTrackColor)));
     expect(sliderBox, isNot(paints..rect(color: sliderTheme.inactiveTrackColor)));
@@ -1296,20 +1246,17 @@ void main() {
       return MaterialApp(
         home: Directionality(
           textDirection: TextDirection.ltr,
-          child: MediaQuery(
-            data: MediaQueryData.fromWindow(window),
-            child: Material(
-              child: Center(
-                child: Theme(
-                  data: theme,
-                  child: RangeSlider(
-                    values: values,
-                    labels: RangeLabels(values.start.toStringAsFixed(2), values.end.toStringAsFixed(2)),
-                    divisions: divisions,
-                    activeColor: activeColor,
-                    inactiveColor: inactiveColor,
-                    onChanged: onChanged,
-                  ),
+          child: Material(
+            child: Center(
+              child: Theme(
+                data: theme,
+                child: RangeSlider(
+                  values: values,
+                  labels: RangeLabels(values.start.toStringAsFixed(2), values.end.toStringAsFixed(2)),
+                  divisions: divisions,
+                  activeColor: activeColor,
+                  inactiveColor: inactiveColor,
+                  onChanged: onChanged,
                 ),
               ),
             ),
@@ -1331,7 +1278,7 @@ void main() {
       valueIndicatorBox,
       paints
         ..path(color: sliderTheme.valueIndicatorColor)
-        ..paragraph()
+        ..paragraph(),
     );
     await gesture.up();
     // Wait for value indicator animation to finish.
@@ -1348,9 +1295,9 @@ void main() {
       int? divisions,
       bool enabled = true,
     }) {
-      final ValueChanged<RangeValues> onChanged = (RangeValues newValues) {
+      void onChanged(RangeValues newValues) {
         values = newValues;
-      };
+      }
       return MaterialApp(
         home: Scaffold(
           // The builder is used to pass the context from the MaterialApp widget
@@ -1460,20 +1407,17 @@ void main() {
           textDirection: TextDirection.ltr,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: Theme(
-                      data: theme,
-                      child: RangeSlider(
-                        values: values,
-                        onChanged: (RangeValues newValues) {
-                          setState(() {
-                            values = newValues;
-                          });
-                        },
-                      ),
+              return Material(
+                child: Center(
+                  child: Theme(
+                    data: theme,
+                    child: RangeSlider(
+                      values: values,
+                      onChanged: (RangeValues newValues) {
+                        setState(() {
+                          values = newValues;
+                        });
+                      },
                     ),
                   ),
                 ),
@@ -1531,21 +1475,18 @@ void main() {
           textDirection: TextDirection.ltr,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
-              return MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: Center(
-                    child: Theme(
-                      data: theme,
-                      child: RangeSlider(
-                        values: values,
-                        labels: RangeLabels(values.start.toStringAsFixed(2), values.end.toStringAsFixed(2)),
-                        onChanged: (RangeValues newValues) {
-                          setState(() {
-                            values = newValues;
-                          });
-                        },
-                      ),
+              return Material(
+                child: Center(
+                  child: Theme(
+                    data: theme,
+                    child: RangeSlider(
+                      values: values,
+                      labels: RangeLabels(values.start.toStringAsFixed(2), values.end.toStringAsFixed(2)),
+                      onChanged: (RangeValues newValues) {
+                        setState(() {
+                          values = newValues;
+                        });
+                      },
                     ),
                   ),
                 ),
@@ -1580,7 +1521,7 @@ void main() {
       valueIndicatorBox,
       paints
         ..path(color: sliderTheme.valueIndicatorColor)
-        ..paragraph()
+        ..paragraph(),
     );
 
     await gesture.up();
@@ -1655,7 +1596,7 @@ void main() {
       valueIndicatorBox,
       paints
         ..path(color: sliderTheme.valueIndicatorColor)
-        ..paragraph()
+        ..paragraph(),
     );
 
     await gesture.up();
@@ -1723,45 +1664,41 @@ void main() {
     /// The first circle is the thumb, the second one is the overlapping shape
     /// circle, and the last one is the second thumb.
     expect(
-        find.byType(RangeSlider),
-        paints
-          ..circle()
-          ..circle(color: sliderTheme.overlappingShapeStrokeColor)
-          ..circle()
+      find.byType(RangeSlider),
+      paints
+        ..circle()
+        ..circle(color: sliderTheme.overlappingShapeStrokeColor)
+        ..circle(),
     );
 
     await gesture.up();
 
     expect(
-        find.byType(RangeSlider),
-        paints
-          ..circle()
-          ..circle(color: sliderTheme.overlappingShapeStrokeColor)
-          ..circle()
+      find.byType(RangeSlider),
+      paints
+        ..circle()
+        ..circle(color: sliderTheme.overlappingShapeStrokeColor)
+        ..circle(),
     );
   });
 
   testWidgets('Range Slider Semantics', (WidgetTester tester) async {
     await tester.pumpWidget(
-        MaterialApp(
-          home: Theme(
-            data: ThemeData.light(),
-            child: Directionality(
-              textDirection: TextDirection.ltr,
-              child: MediaQuery(
-                data: MediaQueryData.fromWindow(window),
-                child: Material(
-                  child: RangeSlider(
-                    values: const RangeValues(10.0, 12.0),
-                    min: 0.0,
-                    max: 100.0,
-                    onChanged: (RangeValues v) { },
-                  ),
-                ),
+      MaterialApp(
+        home: Theme(
+          data: ThemeData.light(),
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: Material(
+              child: RangeSlider(
+                values: const RangeValues(10.0, 12.0),
+                max: 100.0,
+                onChanged: (RangeValues v) { },
               ),
             ),
           ),
-        )
+        ),
+      ),
     );
 
     await tester.pumpAndSettle();
@@ -1809,11 +1746,7 @@ void main() {
       inactiveColor: Colors.grey,
       labels: const RangeLabels('lowerValue', 'upperValue'),
       max: 100.0,
-      min: 0.0,
       onChanged: null,
-      onChangeEnd: null,
-      onChangeStart: null,
-      semanticFormatterCallback: null,
       values: const RangeValues(25.0, 75.0),
     ).debugFillProperties(builder);
 
@@ -1859,17 +1792,18 @@ void main() {
     // _RenderRangeSlider is the last render object in the tree.
     final RenderObject renderObject = tester.allRenderObjects.last;
 
-    expect(renderObject,
-        paints
-          // left inactive track RRect
-          ..rrect(rrect: RRect.fromLTRBAndCorners(-24.0, 3.0, -12.0, 7.0, topLeft: const Radius.circular(2.0), bottomLeft: const Radius.circular(2.0)))
-          // active track RRect
-          ..rect(rect: const Rect.fromLTRB(-12.0, 2.0, 0.0, 8.0))
-          // right inactive track RRect
-          ..rrect(rrect: RRect.fromLTRBAndCorners(0.0, 3.0, 24.0, 7.0, topRight: const Radius.circular(2.0), bottomRight: const Radius.circular(2.0)))
-          // thumbs
-          ..circle(x: -12.0, y: 5.0, radius: 10.0,)
-          ..circle(x: 0.0, y: 5.0, radius: 10.0,)
+    expect(
+      renderObject,
+      paints
+        // left inactive track RRect
+        ..rrect(rrect: RRect.fromLTRBAndCorners(-24.0, 3.0, -12.0, 7.0, topLeft: const Radius.circular(2.0), bottomLeft: const Radius.circular(2.0)))
+        // active track RRect
+        ..rect(rect: const Rect.fromLTRB(-12.0, 2.0, 0.0, 8.0))
+        // right inactive track RRect
+        ..rrect(rrect: RRect.fromLTRBAndCorners(0.0, 3.0, 24.0, 7.0, topRight: const Radius.circular(2.0), bottomRight: const Radius.circular(2.0)))
+        // thumbs
+        ..circle(x: -12.0, y: 5.0, radius: 10.0)
+        ..circle(x: 0.0, y: 5.0, radius: 10.0),
     );
   });
 
@@ -1877,9 +1811,9 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(
-            sliderTheme: const SliderThemeData(
-              rangeTrackShape: RectangularRangeSliderTrackShape(),
-            )
+          sliderTheme: const SliderThemeData(
+            rangeTrackShape: RectangularRangeSliderTrackShape(),
+          ),
         ),
         home: Directionality(
           textDirection: TextDirection.ltr,
@@ -1903,17 +1837,18 @@ void main() {
     final RenderObject renderObject = tester.allRenderObjects.last;
 
     //There should no gap between the inactive track and active track.
-    expect(renderObject,
-        paints
+    expect(
+      renderObject,
+      paints
         // left inactive track RRect
-          ..rect(rect: const Rect.fromLTRB(-24.0, 3.0, -12.0, 7.0))
+        ..rect(rect: const Rect.fromLTRB(-24.0, 3.0, -12.0, 7.0))
         // active track RRect
-          ..rect(rect: const Rect.fromLTRB(-12.0, 3.0, 0.0, 7.0))
+        ..rect(rect: const Rect.fromLTRB(-12.0, 3.0, 0.0, 7.0))
         // right inactive track RRect
-          ..rect(rect: const Rect.fromLTRB(0.0, 3.0, 24.0, 7.0))
+        ..rect(rect: const Rect.fromLTRB(0.0, 3.0, 24.0, 7.0))
         // thumbs
-          ..circle(x: -12.0, y: 5.0, radius: 10.0,)
-          ..circle(x: 0.0, y: 5.0, radius: 10.0,)
+        ..circle(x: -12.0, y: 5.0, radius: 10.0)
+        ..circle(x: 0.0, y: 5.0, radius: 10.0),
     );
   });
 

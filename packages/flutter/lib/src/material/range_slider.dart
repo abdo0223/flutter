@@ -18,8 +18,8 @@ import 'slider_theme.dart';
 import 'theme.dart';
 
 // Examples can assume:
-// RangeValues _rangeValues = RangeValues(0.3, 0.7);
-// RangeValues _dollarsRange = RangeValues(50, 100);
+// RangeValues _rangeValues = const RangeValues(0.3, 0.7);
+// RangeValues _dollarsRange = const RangeValues(50, 100);
 // void setState(VoidCallback fn) { }
 
 /// [RangeSlider] uses this callback to paint the value indicator on the overlay.
@@ -33,8 +33,7 @@ typedef PaintRangeValueIndicator = void Function(PaintingContext context, Offset
 ///
 /// {@youtube 560 315 https://www.youtube.com/watch?v=ufb4gIPDmEs}
 ///
-/// {@tool dartpad --template=stateful_widget_scaffold}
-///
+/// {@tool dartpad}
 /// ![A range slider widget, consisting of 5 divisions and showing the default
 /// value indicator.](https://flutter.github.io/assets-for-api-docs/assets/material/range_slider.png)
 ///
@@ -42,28 +41,7 @@ typedef PaintRangeValueIndicator = void Function(PaintingContext context, Offset
 /// divisions, from 0 to 100. This means are values are split between 0, 20, 40,
 /// 60, 80, and 100. The range values are initialized with 40 and 80 in this demo.
 ///
-/// ```dart
-/// RangeValues _currentRangeValues = const RangeValues(40, 80);
-///
-/// @override
-/// Widget build(BuildContext context) {
-///   return RangeSlider(
-///     values: _currentRangeValues,
-///     min: 0,
-///     max: 100,
-///     divisions: 5,
-///     labels: RangeLabels(
-///       _currentRangeValues.start.round().toString(),
-///       _currentRangeValues.end.round().toString(),
-///     ),
-///     onChanged: (RangeValues values) {
-///       setState(() {
-///         _currentRangeValues = values;
-///       });
-///     },
-///   );
-/// }
-/// ```
+/// ** See code in examples/api/lib/material/range_slider/range_slider.0.dart **
 /// {@end-tool}
 ///
 /// A range slider can be used to select from either a continuous or a discrete
@@ -150,8 +128,8 @@ class RangeSlider extends StatefulWidget {
   /// appearance is achieved using a [SliderThemeData].
   ///
   /// The [values], [min], [max] must not be null. The [min] must be less than
-  /// or equal to the [max]. [values.start] must be less than or equal to
-  /// [values.end]. [values.start] and [values.end] must be greater than or
+  /// or equal to the [max]. [values].start must be less than or equal to
+  /// [values].end. [values].start and [values].end must be greater than or
   /// equal to the [min] and less than or equal to the [max]. The [divisions]
   /// must be null or greater than 0.
   RangeSlider({
@@ -377,7 +355,7 @@ class RangeSlider extends StatefulWidget {
   static const double _minTouchTargetWidth = kMinInteractiveDimension;
 
   @override
-  _RangeSliderState createState() => _RangeSliderState();
+  State<RangeSlider> createState() => _RangeSliderState();
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
@@ -524,7 +502,7 @@ class _RangeSliderState extends State<RangeSlider> with TickerProviderStateMixin
   // immediately selected while the drag displacement is zero. If the first
   // non-zero displacement is negative, then the left thumb is selected, and if its
   // positive, then the right thumb is selected.
-  static final RangeThumbSelector _defaultRangeThumbSelector = (
+  Thumb? _defaultRangeThumbSelector(
     TextDirection textDirection,
     RangeValues values,
     double tapValue,
@@ -566,9 +544,7 @@ class _RangeSliderState extends State<RangeSlider> with TickerProviderStateMixin
         return Thumb.end;
     }
     return null;
-  };
-
-
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -838,7 +814,6 @@ class _RenderRangeSlider extends RenderBox with RelayoutWhenSystemFontsChangeMix
   // (0,0).
   Rect get _trackRect => _sliderTheme.rangeTrackShape!.getPreferredRect(
     parentBox: this,
-    offset: Offset.zero,
     sliderTheme: _sliderTheme,
     isDiscrete: false,
   );
@@ -1133,9 +1108,7 @@ class _RenderRangeSlider extends RenderBox with RelayoutWhenSystemFontsChangeMix
       }
       _updateLabelPainter(_lastThumbSelection!);
 
-      if (onChangeStart != null) {
-        onChangeStart!(currentValues);
-      }
+      onChangeStart?.call(currentValues);
 
       onChanged!(_discretizeRangeValues(_newValues));
 
@@ -1204,9 +1177,7 @@ class _RenderRangeSlider extends RenderBox with RelayoutWhenSystemFontsChangeMix
 
     if (_active && _state.mounted && _lastThumbSelection != null) {
       final RangeValues discreteValues = _discretizeRangeValues(_newValues);
-      if (onChangeEnd != null) {
-        onChangeEnd!(discreteValues);
-      }
+      onChangeEnd?.call(discreteValues);
       _active = false;
     }
     _state.overlayController.reverse();
@@ -1519,12 +1490,12 @@ class _RenderRangeSlider extends RenderBox with RelayoutWhenSystemFontsChangeMix
 
   // Create the semantics configuration for a single value.
   SemanticsConfiguration _createSemanticsConfiguration(
-      double value,
-      double increasedValue,
-      double decreasedValue,
-      String? label,
-      VoidCallback increaseAction,
-      VoidCallback decreaseAction,
+    double value,
+    double increasedValue,
+    double decreasedValue,
+    String? label,
+    VoidCallback increaseAction,
+    VoidCallback decreaseAction,
   ) {
     final SemanticsConfiguration config = SemanticsConfiguration();
     config.isEnabled = isEnabled;
@@ -1550,9 +1521,9 @@ class _RenderRangeSlider extends RenderBox with RelayoutWhenSystemFontsChangeMix
 
   @override
   void assembleSemanticsNode(
-      SemanticsNode node,
-      SemanticsConfiguration config,
-      Iterable<SemanticsNode> children,
+    SemanticsNode node,
+    SemanticsConfiguration config,
+    Iterable<SemanticsNode> children,
   ) {
     assert(children.isEmpty);
 
@@ -1615,7 +1586,7 @@ class _RenderRangeSlider extends RenderBox with RelayoutWhenSystemFontsChangeMix
 
   void _increaseStartAction() {
     if (isEnabled) {
-        onChanged!(RangeValues(_increasedStartValue, values.end));
+      onChanged!(RangeValues(_increasedStartValue, values.end));
     }
   }
 
@@ -1712,12 +1683,8 @@ class _RenderValueIndicator extends RenderBox with RelayoutWhenSystemFontsChange
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    if (_state.paintBottomValueIndicator != null) {
-      _state.paintBottomValueIndicator!(context, offset);
-    }
-    if (_state.paintTopValueIndicator != null) {
-      _state.paintTopValueIndicator!(context, offset);
-    }
+    _state.paintBottomValueIndicator?.call(context, offset);
+    _state.paintTopValueIndicator?.call(context, offset);
   }
 
   @override

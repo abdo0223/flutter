@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// @dart = 2.8
+
 import 'dart:async';
 
 import 'package:args/command_runner.dart';
@@ -16,7 +18,7 @@ import 'package:flutter_tools/src/globals.dart' as globals;
 
 import '../src/common.dart';
 import '../src/context.dart';
-import '../src/testbed.dart';
+import '../src/test_flutter_command_runner.dart';
 
 void main() {
   Directory tempDir;
@@ -46,7 +48,7 @@ void main() {
     // We need to add a dependency with web support to trigger
     // the generated_plugin_registrant generation.
     await _addDependency(projectDir, 'shared_preferences',
-        version: '^0.5.12+4');
+        version: '^2.0.0');
     await _analyzeProject(projectDir);
 
     expect(
@@ -124,7 +126,7 @@ Future<void> _ensureFlutterToolsSnapshot() async {
 
   final File snapshotFile = globals.fs.file(flutterToolsSnapshotPath);
   if (snapshotFile.existsSync()) {
-    snapshotFile.renameSync(flutterToolsSnapshotPath + '.bak');
+    snapshotFile.renameSync('$flutterToolsSnapshotPath.bak');
   }
 
   final List<String> snapshotArgs = <String>[
@@ -136,10 +138,9 @@ Future<void> _ensureFlutterToolsSnapshot() async {
     '../../bin/cache/dart-sdk/bin/dart',
     snapshotArgs,
   );
-  if (snapshotResult.exitCode != 0) {
-    print(snapshotResult.stdout);
-    print(snapshotResult.stderr);
-  }
+  printOnFailure('Output of dart ${snapshotArgs.join(" ")}:');
+  printOnFailure(snapshotResult.stdout.toString());
+  printOnFailure(snapshotResult.stderr.toString());
   expect(snapshotResult.exitCode, 0);
 }
 
@@ -155,7 +156,7 @@ Future<void> _restoreFlutterToolsSnapshot() async {
   );
 
   final File snapshotBackup =
-      globals.fs.file(flutterToolsSnapshotPath + '.bak');
+      globals.fs.file('$flutterToolsSnapshotPath.bak');
   if (!snapshotBackup.existsSync()) {
     // No backup to restore.
     return;
@@ -231,13 +232,12 @@ Future<void> _analyzeProject(Directory workingDir) async {
   ];
 
   final ProcessResult exec = await Process.run(
-    globals.artifacts.getArtifactPath(Artifact.engineDartBinary),
+    globals.artifacts.getHostArtifact(HostArtifact.engineDartBinary).path,
     args,
     workingDirectory: workingDir.path,
   );
-  if (exec.exitCode != 0) {
-    print(exec.stdout);
-    print(exec.stderr);
-  }
+  printOnFailure('Output of flutter analyze:');
+  printOnFailure(exec.stdout.toString());
+  printOnFailure(exec.stderr.toString());
   expect(exec.exitCode, 0);
 }

@@ -4,13 +4,10 @@
 
 import 'dart:collection';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../flutter_test_alternative.dart' show Fake;
 import 'semantics_tester.dart';
 
 final List<String> results = <String>[];
@@ -420,10 +417,10 @@ void main() {
   testWidgets('Route localHistory - popUntil', (WidgetTester tester) async {
     final TestRoute routeA = TestRoute('A');
     routeA.addLocalHistoryEntry(LocalHistoryEntry(
-      onRemove: () { routeA.log('onRemove 0'); }
+      onRemove: () { routeA.log('onRemove 0'); },
     ));
     routeA.addLocalHistoryEntry(LocalHistoryEntry(
-      onRemove: () { routeA.log('onRemove 1'); }
+      onRemove: () { routeA.log('onRemove 1'); },
     ));
     final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
     await tester.pumpWidget(
@@ -458,6 +455,9 @@ void main() {
       <String>[
       ],
     );
+    await tester.pumpWidget(Container());
+    expect(routes.isEmpty, isTrue);
+    results.clear();
   });
 
   group('PageRouteObserver', () {
@@ -522,6 +522,33 @@ void main() {
       expect(pageRouteAware.didPushCount, 2);
       expect(pageRouteAware.didPopCount, 0);
     });
+
+    test('releases reference to route when unsubscribed', () {
+      final RouteObserver<PageRoute<dynamic>> observer = RouteObserver<PageRoute<dynamic>>();
+      final MockRouteAware pageRouteAware = MockRouteAware();
+      final MockRouteAware page2RouteAware = MockRouteAware();
+      final MockPageRoute pageRoute = MockPageRoute();
+      final MockPageRoute nextPageRoute = MockPageRoute();
+      observer.subscribe(pageRouteAware, pageRoute);
+      observer.subscribe(pageRouteAware, nextPageRoute);
+      observer.subscribe(page2RouteAware, pageRoute);
+      observer.subscribe(page2RouteAware, nextPageRoute);
+      expect(pageRouteAware.didPushCount, 2);
+      expect(page2RouteAware.didPushCount, 2);
+
+      expect(observer.debugObservingRoute(pageRoute), true);
+      expect(observer.debugObservingRoute(nextPageRoute), true);
+
+      observer.unsubscribe(pageRouteAware);
+
+      expect(observer.debugObservingRoute(pageRoute), true);
+      expect(observer.debugObservingRoute(nextPageRoute), true);
+
+      observer.unsubscribe(page2RouteAware);
+
+      expect(observer.debugObservingRoute(pageRoute), false);
+      expect(observer.debugObservingRoute(nextPageRoute), false);
+    });
   });
 
   testWidgets('Can autofocus a TextField nested in a Focus in a route.', (WidgetTester tester) async {
@@ -569,7 +596,7 @@ void main() {
                         pageBuilder: (BuildContext context, Animation<double> input, Animation<double> out) {
                           return const Text('Page Two');
                         },
-                      )
+                      ),
                     );
                   },
                   child: const Text('Open page'),
@@ -577,7 +604,7 @@ void main() {
               },
             );
           },
-        )
+        ),
       );
 
       // Open the new route.
@@ -620,15 +647,15 @@ void main() {
                       },
                       // modified value, default PageRouteBuilder reverse transition duration should be 300ms.
                       reverseTransitionDuration: const Duration(milliseconds: 150),
-                    )
+                    ),
                   );
                 },
                 child: const Text('Open page'),
               );
             },
           );
-        })
-      );
+        },
+      ));
 
       // Open the new route.
       await tester.tap(find.byType(ElevatedButton));
@@ -663,7 +690,7 @@ void main() {
         MaterialApp(
           navigatorKey: navigator,
           home: const Text('home'),
-        )
+        ),
       );
 
       // Push page one, its secondary animation is kAlwaysDismissedAnimation.
@@ -718,10 +745,10 @@ void main() {
     testWidgets('secondary animation is kDismissed when next route is removed', (WidgetTester tester) async {
       final GlobalKey<NavigatorState> navigator = GlobalKey<NavigatorState>();
       await tester.pumpWidget(
-          MaterialApp(
-            navigatorKey: navigator,
-            home: const Text('home'),
-          )
+        MaterialApp(
+          navigatorKey: navigator,
+          home: const Text('home'),
+        ),
       );
 
       // Push page one, its secondary animation is kAlwaysDismissedAnimation.
@@ -773,10 +800,10 @@ void main() {
     testWidgets('secondary animation is kDismissed after train hopping finishes and pop', (WidgetTester tester) async {
       final GlobalKey<NavigatorState> navigator = GlobalKey<NavigatorState>();
       await tester.pumpWidget(
-          MaterialApp(
-            navigatorKey: navigator,
-            home: const Text('home'),
-          )
+        MaterialApp(
+          navigatorKey: navigator,
+          home: const Text('home'),
+        ),
       );
 
       // Push page one, its secondary animation is kAlwaysDismissedAnimation.
@@ -845,10 +872,10 @@ void main() {
     testWidgets('secondary animation is kDismissed when train hopping is interrupted', (WidgetTester tester) async {
       final GlobalKey<NavigatorState> navigator = GlobalKey<NavigatorState>();
       await tester.pumpWidget(
-          MaterialApp(
-            navigatorKey: navigator,
-            home: const Text('home'),
-          )
+        MaterialApp(
+          navigatorKey: navigator,
+          home: const Text('home'),
+        ),
       );
 
       // Push page one, its secondary animation is kAlwaysDismissedAnimation.
@@ -931,7 +958,7 @@ void main() {
             );
           },
           initialRoute: '/a',
-        )
+        ),
       );
       // The secondary animation of the bottom route should be chained with the
       // primary animation of top most route.
@@ -982,7 +1009,7 @@ void main() {
       expect(find.byType(ModalBarrier), findsNWidgets(1));
     });
 
-    testWidgets('showGeneralDialog adds non-dismissable barrier when barrierDismissable is false', (WidgetTester tester) async {
+    testWidgets('showGeneralDialog adds non-dismissible barrier when barrierDismissible is false', (WidgetTester tester) async {
       await tester.pumpWidget(MaterialApp(
         home: Builder(
           builder: (BuildContext context) {
@@ -1009,6 +1036,41 @@ void main() {
       expect(find.byType(ModalBarrier), findsNWidgets(2));
       final ModalBarrier barrier = find.byType(ModalBarrier).evaluate().last.widget as ModalBarrier;
       expect(barrier.dismissible, isFalse);
+
+      // Close the dialog.
+      final StatefulElement navigatorElement = find.byType(Navigator).evaluate().last as StatefulElement;
+      final NavigatorState navigatorState = navigatorElement.state as NavigatorState;
+      navigatorState.pop();
+      await tester.pumpAndSettle();
+      expect(find.byType(ModalBarrier), findsNWidgets(1));
+    });
+
+    testWidgets('showGeneralDialog uses null as a barrierLabel by default', (WidgetTester tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Builder(
+          builder: (BuildContext context) {
+            return ElevatedButton(
+              onPressed: () {
+                showGeneralDialog<void>(
+                  context: context,
+                  transitionDuration: Duration.zero,
+                  pageBuilder: (BuildContext innerContext, _, __) {
+                    return const SizedBox();
+                  },
+                );
+              },
+              child: const Text('Show Dialog'),
+            );
+          },
+        ),
+      ));
+
+      // Open the dialog.
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pump();
+      expect(find.byType(ModalBarrier), findsNWidgets(2));
+      final ModalBarrier barrier = find.byType(ModalBarrier).evaluate().last.widget as ModalBarrier;
+      expect(barrier.semanticsLabel, same(null));
 
       // Close the dialog.
       final StatefulElement navigatorElement = find.byType(Navigator).evaluate().last as StatefulElement;
@@ -1312,12 +1374,12 @@ void main() {
                     Navigator.of(context).push<void>(
                       _TestDialogRouteWithCustomBarrierCurve<void>(
                         child: const Text('Hello World'),
-                      )
+                      ),
                     );
                   },
                 ),
               );
-            }
+            },
           ),
         ),
       ));
@@ -1429,21 +1491,21 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Material(
           child: Builder(
-              builder: (BuildContext context) {
-                return Center(
-                  child: ElevatedButton(
-                    child: const Text('X'),
-                    onPressed: () {
-                      Navigator.of(context).push<void>(
-                          _TestDialogRouteWithCustomBarrierCurve<void>(
-                            child: const Text('Hello World'),
-                            barrierColor: Colors.white,
-                          )
-                      );
-                    },
-                  ),
-                );
-              }
+            builder: (BuildContext context) {
+              return Center(
+                child: ElevatedButton(
+                  child: const Text('X'),
+                  onPressed: () {
+                    Navigator.of(context).push<void>(
+                      _TestDialogRouteWithCustomBarrierCurve<void>(
+                        child: const Text('Hello World'),
+                        barrierColor: Colors.white,
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
           ),
         ),
       ));
@@ -1547,7 +1609,7 @@ void main() {
               TestSemantics(
                 id: 5,
                 rect: TestSemantics.fullScreen,
-                actions: <SemanticsAction>[SemanticsAction.tap],
+                actions: <SemanticsAction>[SemanticsAction.tap, SemanticsAction.dismiss],
                 label: 'test label',
                 textDirection: TextDirection.ltr,
               ),
@@ -1576,7 +1638,7 @@ void main() {
       navigatorKey.currentState!.push<void>(
         MaterialPageRoute<void>(
           builder: (BuildContext context) => const Text('dummy2'),
-        )
+        ),
       );
       await tester.pumpAndSettle();
 
@@ -1590,7 +1652,7 @@ void main() {
       navigatorKey.currentState!.push<void>(
         MaterialPageRoute<void>(
           builder: (BuildContext context) => const Text('dummy3'),
-        )
+        ),
       );
       await tester.pumpAndSettle();
       final Element textOnPageThree = tester.element(find.text('dummy3'));
@@ -1620,9 +1682,9 @@ void main() {
 
       // Pushes one page.
       navigatorKey.currentState!.push<void>(
-          MaterialPageRoute<void>(
-            builder: (BuildContext context) => const Material(child: TextField()),
-          )
+        MaterialPageRoute<void>(
+          builder: (BuildContext context) => const Material(child: TextField()),
+        ),
       );
       await tester.pumpAndSettle();
 
@@ -1640,9 +1702,9 @@ void main() {
 
       // Pushes another page.
       navigatorKey.currentState!.push<void>(
-          MaterialPageRoute<void>(
-            builder: (BuildContext context) => const Text('dummy3'),
-          )
+        MaterialPageRoute<void>(
+          builder: (BuildContext context) => const Text('dummy3'),
+        ),
       );
       await tester.pumpAndSettle();
       final Element textOnPageThree = tester.element(find.text('dummy3'));
@@ -1661,7 +1723,7 @@ void main() {
 
     testWidgets('child with local history can be disposed', (WidgetTester tester) async {
       // Regression test: https://github.com/flutter/flutter/issues/52478
-      await tester.pumpWidget(MaterialApp(
+      await tester.pumpWidget(const MaterialApp(
         home: WidgetWithLocalHistory(),
       ));
 
@@ -1669,7 +1731,6 @@ void main() {
       state.addLocalHistory();
       // Waits for modal route to update its internal state;
       await tester.pump();
-
       // Pumps a new widget to dispose WidgetWithLocalHistory. This should cause
       // it to remove the local history entry from modal route during
       // finalizeTree.
@@ -1677,6 +1738,25 @@ void main() {
         home: Text('dummy'),
       ));
       // Waits for modal route to update its internal state;
+      await tester.pump();
+      expect(tester.takeException(), null);
+    });
+
+    testWidgets('child with no local history can be disposed', (WidgetTester tester) async {
+      await tester.pumpWidget(const MaterialApp(
+        home: WidgetWithNoLocalHistory(),
+      ));
+
+      final WidgetWithNoLocalHistoryState state = tester.state(find.byType(WidgetWithNoLocalHistory));
+      state.addLocalHistory();
+      // Waits for modal route to update its internal state;
+      await tester.pump();
+      // Pumps a new widget to dispose WidgetWithNoLocalHistory. This should cause
+      // it to remove the local history entry from modal route during
+      // finalizeTree.
+      await tester.pumpWidget(const MaterialApp(
+        home: Text('dummy'),
+      ));
       await tester.pump();
       expect(tester.takeException(), null);
     });
@@ -1738,7 +1818,7 @@ void main() {
     navigatorKey.currentState!.push<void>(MaterialPageRoute<void>(
       builder: (BuildContext context) {
         return const Text('page2');
-      }
+      },
     ));
 
     await tester.pumpAndSettle();
@@ -1905,14 +1985,16 @@ class _TestDialogRouteWithCustomBarrierCurve<T> extends PopupRoute<T> {
   @override
   Widget buildPage(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
     return Semantics(
-      child: _child,
       scopesRoute: true,
       explicitChildNodes: true,
+      child: _child,
     );
   }
 }
 
 class WidgetWithLocalHistory extends StatefulWidget {
+  const WidgetWithLocalHistory({Key? key}) : super(key: key);
+
   @override
   WidgetWithLocalHistoryState createState() => WidgetWithLocalHistoryState();
 }
@@ -1938,19 +2020,46 @@ class WidgetWithLocalHistoryState extends State<WidgetWithLocalHistory> {
   }
 }
 
+class WidgetWithNoLocalHistory extends StatefulWidget {
+  const WidgetWithNoLocalHistory({Key? key}) : super(key: key);
+
+  @override
+  WidgetWithNoLocalHistoryState createState() => WidgetWithNoLocalHistoryState();
+}
+
+class WidgetWithNoLocalHistoryState extends State<WidgetWithNoLocalHistory> {
+  late LocalHistoryEntry _localHistory;
+
+  void addLocalHistory() {
+    _localHistory = LocalHistoryEntry();
+    // Not calling `route.addLocalHistoryEntry` here.
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _localHistory.remove();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Text('dummy');
+  }
+}
+
 class TransitionDetector extends DefaultTransitionDelegate<void> {
   bool hasTransition = false;
   @override
   Iterable<RouteTransitionRecord> resolve({
     required List<RouteTransitionRecord> newPageRouteHistory,
     required Map<RouteTransitionRecord?, RouteTransitionRecord> locationToExitingPageRoute,
-    required Map<RouteTransitionRecord?, List<RouteTransitionRecord>> pageRouteToPagelessRoutes
+    required Map<RouteTransitionRecord?, List<RouteTransitionRecord>> pageRouteToPagelessRoutes,
   }) {
     hasTransition = true;
     return super.resolve(
       newPageRouteHistory: newPageRouteHistory,
       locationToExitingPageRoute: locationToExitingPageRoute,
-      pageRouteToPagelessRoutes: pageRouteToPagelessRoutes
+      pageRouteToPagelessRoutes: pageRouteToPagelessRoutes,
     );
   }
 }
@@ -1959,7 +2068,7 @@ Widget buildNavigator({
   required List<Page<dynamic>> pages,
   required PopPageCallback onPopPage,
   GlobalKey<NavigatorState>? key,
-  TransitionDelegate<dynamic>? transitionDelegate
+  TransitionDelegate<dynamic>? transitionDelegate,
 }) {
   return MediaQuery(
     data: MediaQueryData.fromWindow(WidgetsBinding.instance!.window),
@@ -1967,7 +2076,7 @@ Widget buildNavigator({
       locale: const Locale('en', 'US'),
       delegates: const <LocalizationsDelegate<dynamic>>[
         DefaultMaterialLocalizations.delegate,
-        DefaultWidgetsLocalizations.delegate
+        DefaultWidgetsLocalizations.delegate,
       ],
       child: Directionality(
         textDirection: TextDirection.ltr,

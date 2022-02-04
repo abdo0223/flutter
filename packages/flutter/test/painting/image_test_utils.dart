@@ -8,8 +8,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 
-import 'package:flutter_test/flutter_test.dart';
-
 class TestImageProvider extends ImageProvider<TestImageProvider> {
   TestImageProvider(this.testImage);
 
@@ -44,9 +42,4 @@ class TestImageProvider extends ImageProvider<TestImageProvider> {
 
   @override
   String toString() => '${describeIdentity(this)}()';
-}
-
-class FakeImageConfiguration implements ImageConfiguration {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

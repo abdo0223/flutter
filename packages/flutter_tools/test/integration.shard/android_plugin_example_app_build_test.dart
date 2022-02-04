@@ -9,7 +9,7 @@ import '../src/common.dart';
 import 'test_utils.dart';
 
 void main() {
-  Directory tempDir;
+  late Directory tempDir;
 
   setUp(() async {
     tempDir = createResolvedTempDirectorySync('flutter_plugin_test.');
@@ -45,7 +45,7 @@ void main() {
         RegExp(r'com\.android\.tools\.build:gradle:(\d+\.\d+\.\d+)');
 
     // Use AGP 4.1.0
-    String newBuildGradle = buildGradle.replaceAll(
+    final String newBuildGradle = buildGradle.replaceAll(
         androidPluginRegExp, 'com.android.tools.build:gradle:4.1.0');
     buildGradleFile.writeAsStringSync(newBuildGradle);
 
@@ -80,11 +80,6 @@ void main() {
         .directory(fileSystem.path
             .join(exampleAppDir.path, 'android', 'gradle', 'wrapper'))
         .deleteSync(recursive: true);
-
-    // Use AGP 3.3.0
-    newBuildGradle = buildGradle.replaceAll(
-        androidPluginRegExp, 'com.android.tools.build:gradle:3.3.0');
-    buildGradleFile.writeAsStringSync(newBuildGradle);
 
     // Enable R8 in gradle.properties
     final File gradleProperties =

@@ -4,17 +4,19 @@
 
 import 'package:flutter/material.dart';
 
-import 'package:flutter_gallery/demo/shrine/backdrop.dart';
-import 'package:flutter_gallery/demo/shrine/category_menu_page.dart';
-import 'package:flutter_gallery/demo/shrine/colors.dart';
-import 'package:flutter_gallery/demo/shrine/expanding_bottom_sheet.dart';
-import 'package:flutter_gallery/demo/shrine/home.dart';
-import 'package:flutter_gallery/demo/shrine/login.dart';
-import 'package:flutter_gallery/demo/shrine/supplemental/cut_corners_border.dart';
+import 'backdrop.dart';
+import 'category_menu_page.dart';
+import 'colors.dart';
+import 'expanding_bottom_sheet.dart';
+import 'home.dart';
+import 'login.dart';
+import 'supplemental/cut_corners_border.dart';
 
 class ShrineApp extends StatefulWidget {
+  const ShrineApp({Key? key}) : super(key: key);
+
   @override
-  _ShrineAppState createState() => _ShrineAppState();
+  State<ShrineApp> createState() => _ShrineAppState();
 }
 
 class _ShrineAppState extends State<ShrineApp> with SingleTickerProviderStateMixin {
@@ -35,6 +37,11 @@ class _ShrineAppState extends State<ShrineApp> with SingleTickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // The automatically applied scrollbars on desktop can cause a crash for
+      // demos where many scrollables are all attached to the same
+      // PrimaryScrollController. The gallery needs to be migrated before
+      // enabling this. https://github.com/flutter/gallery/issues/523
+      scrollBehavior: const MaterialScrollBehavior().copyWith(scrollbars: false),
       title: 'Shrine',
       home: HomePage(
         backdrop: Backdrop(
@@ -62,7 +69,7 @@ Route<dynamic>? _getRoute(RouteSettings settings) {
 
   return MaterialPageRoute<void>(
     settings: settings,
-    builder: (BuildContext context) => LoginPage(),
+    builder: (BuildContext context) => const LoginPage(),
     fullscreenDialog: true,
   );
 }
@@ -77,21 +84,14 @@ ThemeData _buildShrineTheme() {
   final ThemeData base = ThemeData.light();
   return base.copyWith(
     colorScheme: kShrineColorScheme,
-    accentColor: kShrineBrown900,
     primaryColor: kShrinePink100,
-    buttonColor: kShrinePink100,
     scaffoldBackgroundColor: kShrineBackgroundWhite,
     cardColor: kShrineBackgroundWhite,
     errorColor: kShrineErrorRed,
-    buttonTheme: const ButtonThemeData(
-      colorScheme: kShrineColorScheme,
-      textTheme: ButtonTextTheme.normal,
-    ),
     primaryIconTheme: _customIconTheme(base.iconTheme),
     inputDecorationTheme: const InputDecorationTheme(border: CutCornersBorder()),
     textTheme: _buildShrineTextTheme(base.textTheme),
     primaryTextTheme: _buildShrineTextTheme(base.primaryTextTheme),
-    accentTextTheme: _buildShrineTextTheme(base.accentTextTheme),
     iconTheme: _customIconTheme(base.iconTheme),
   );
 }
@@ -112,9 +112,7 @@ TextTheme _buildShrineTextTheme(TextTheme base) {
 
 const ColorScheme kShrineColorScheme = ColorScheme(
   primary: kShrinePink100,
-  primaryVariant: kShrineBrown900,
   secondary: kShrinePink50,
-  secondaryVariant: kShrineBrown900,
   surface: kShrineSurfaceWhite,
   background: kShrineBackgroundWhite,
   error: kShrineErrorRed,

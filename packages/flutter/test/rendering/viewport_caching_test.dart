@@ -62,14 +62,14 @@ void main() {
   });
 
   test('Cache extent - nullx viewport', () async {
-    await expectLater(() => RenderViewport(
+    await expectLater(
+      () => RenderViewport(
         crossAxisDirection: AxisDirection.left,
         offset: ViewportOffset.zero(),
-        cacheExtent: null,
         cacheExtentStyle: CacheExtentStyle.viewport,
         children: children,
       ),
-      throwsAssertionError
+      throwsAssertionError,
     );
   });
 
@@ -159,7 +159,7 @@ class CustomConstraintsRenderSliver extends RenderSliver {
   CustomConstraintsRenderSliver(this.constraints);
 
   @override
-  SliverGeometry get geometry => const SliverGeometry();
+  SliverGeometry get geometry => SliverGeometry.zero;
 
   @override
   final SliverConstraints constraints;

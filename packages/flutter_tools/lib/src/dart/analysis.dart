@@ -5,7 +5,6 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:meta/meta.dart';
 import 'package:process/process.dart';
 
 import '../base/common.dart';
@@ -22,16 +21,18 @@ class AnalysisServer {
   AnalysisServer(
     this.sdkPath,
     this.directories, {
-    @required FileSystem fileSystem,
-    @required ProcessManager processManager,
-    @required Logger logger,
-    @required Platform platform,
-    @required Terminal terminal,
+    required FileSystem fileSystem,
+    required ProcessManager processManager,
+    required Logger logger,
+    required Platform platform,
+    required Terminal terminal,
+    String? protocolTrafficLog,
   }) : _fileSystem = fileSystem,
        _processManager = processManager,
        _logger = logger,
        _platform = platform,
-       _terminal = terminal;
+       _terminal = terminal,
+       _protocolTrafficLog = protocolTrafficLog;
 
   final String sdkPath;
   final List<String> directories;
@@ -40,8 +41,9 @@ class AnalysisServer {
   final Logger _logger;
   final Platform _platform;
   final Terminal _terminal;
+  final String? _protocolTrafficLog;
 
-  Process _process;
+  Process? _process;
   final StreamController<bool> _analyzingController =
       StreamController<bool>.broadcast();
   final StreamController<FileAnalysisErrors> _errorsController =
@@ -65,19 +67,21 @@ class AnalysisServer {
       '--disable-server-feature-search',
       '--sdk',
       sdkPath,
+      if (_protocolTrafficLog != null)
+        '--protocol-traffic-log=$_protocolTrafficLog',
     ];
 
     _logger.printTrace('dart ${command.skip(1).join(' ')}');
     _process = await _processManager.start(command);
     // This callback hookup can't throw.
-    unawaited(_process.exitCode.whenComplete(() => _process = null));
+    unawaited(_process!.exitCode.whenComplete(() => _process = null));
 
-    final Stream<String> errorStream = _process.stderr
+    final Stream<String> errorStream = _process!.stderr
         .transform<String>(utf8.decoder)
         .transform<String>(const LineSplitter());
-    errorStream.listen(_logger.printError);
+    errorStream.listen(_handleError);
 
-    final Stream<String> inStream = _process.stdout
+    final Stream<String> inStream = _process!.stdout
         .transform<String>(utf8.decoder)
         .transform<String>(const LineSplitter());
     inStream.listen(_handleServerResponse);
@@ -90,13 +94,35 @@ class AnalysisServer {
         <String, dynamic>{'included': directories, 'excluded': <String>[]});
   }
 
+  final List<String> _logs = <String>[];
+
+  /// Aggregated STDOUT and STDERR logs from the server.
+  ///
+  /// This can be surfaced to the user if the server crashes. If [tail] is null,
+  /// returns all logs, else only the last [tail] lines.
+  String getLogs([int? tail]) {
+    if (tail == null) {
+      return _logs.join('\n');
+    }
+    // Since List doesn't implement a .tail() method, we reverse it then use
+    // .take()
+    final Iterable<String> reversedLogs = _logs.reversed;
+    final List<String> firstTailLogs = reversedLogs.take(tail).toList();
+    return firstTailLogs.reversed.join('\n');
+  }
+
+  void _handleError(String message) {
+    _logs.add('[stderr] $message');
+    _logger.printError(message);
+  }
+
   bool get didServerErrorOccur => _didServerErrorOccur;
 
   Stream<bool> get onAnalyzing => _analyzingController.stream;
 
   Stream<FileAnalysisErrors> get onErrors => _errorsController.stream;
 
-  Future<int> get onExit => _process.exitCode;
+  Future<int?> get onExit async => _process?.exitCode;
 
   void _sendCommand(String method, Map<String, dynamic> params) {
     final String message = json.encode(<String, dynamic>{
@@ -104,11 +130,12 @@ class AnalysisServer {
       'method': method,
       'params': params,
     });
-    _process.stdin.writeln(message);
+    _process?.stdin.writeln(message);
     _logger.printTrace('==> $message');
   }
 
   void _handleServerResponse(String line) {
+    _logs.add('[stdout] $line');
     _logger.printTrace('<== $line');
 
     final dynamic response = json.decode(line);
@@ -117,19 +144,23 @@ class AnalysisServer {
       if (response['event'] != null) {
         final String event = response['event'] as String;
         final dynamic params = response['params'];
-
+        Map<String, dynamic>? paramsMap;
         if (params is Map<String, dynamic>) {
+          paramsMap = castStringKeyedMap(params);
+        }
+
+        if (paramsMap != null) {
           if (event == 'server.status') {
-            _handleStatus(castStringKeyedMap(response['params']));
+            _handleStatus(paramsMap);
           } else if (event == 'analysis.errors') {
-            _handleAnalysisIssues(castStringKeyedMap(response['params']));
+            _handleAnalysisIssues(paramsMap);
           } else if (event == 'server.error') {
-            _handleServerError(castStringKeyedMap(response['params']));
+            _handleServerError(paramsMap);
           }
         }
       } else if (response['error'] != null) {
         // Fields are 'code', 'message', and 'stackTrace'.
-        final Map<String, dynamic> error = castStringKeyedMap(response['error']);
+        final Map<String, dynamic> error = castStringKeyedMap(response['error'])!;
         _logger.printError(
             'Error response from the server: ${error['code']} ${error['message']}');
         if (error['stackTrace'] != null) {
@@ -142,7 +173,7 @@ class AnalysisServer {
   void _handleStatus(Map<String, dynamic> statusInfo) {
     // {"event":"server.status","params":{"analysis":{"isAnalyzing":true}}}
     if (statusInfo['analysis'] != null && !_analyzingController.isClosed) {
-      final bool isAnalyzing = statusInfo['analysis']['isAnalyzing'] as bool;
+      final bool isAnalyzing = (statusInfo['analysis'] as Map<String, dynamic>)['isAnalyzing'] as bool;
       _analyzingController.add(isAnalyzing);
     }
   }
@@ -161,7 +192,7 @@ class AnalysisServer {
     final String file = issueInfo['file'] as String;
     final List<dynamic> errorsList = issueInfo['errors'] as List<dynamic>;
     final List<AnalysisError> errors = errorsList
-        .map<Map<String, dynamic>>(castStringKeyedMap)
+        .map<Map<String, dynamic>>((dynamic e) => castStringKeyedMap(e) ?? <String, dynamic>{})
         .map<AnalysisError>((Map<String, dynamic> json) {
           return AnalysisError(WrittenError.fromJson(json),
             fileSystem: _fileSystem,
@@ -175,7 +206,7 @@ class AnalysisServer {
     }
   }
 
-  Future<bool> dispose() async {
+  Future<bool?> dispose() async {
     await _analyzingController.close();
     await _errorsController.close();
     return _process?.kill();
@@ -193,9 +224,9 @@ enum AnalysisSeverity {
 class AnalysisError implements Comparable<AnalysisError> {
   AnalysisError(
     this.writtenError, {
-    @required Platform platform,
-    @required Terminal terminal,
-    @required FileSystem fileSystem,
+    required Platform platform,
+    required Terminal terminal,
+    required FileSystem fileSystem,
   }) : _platform = platform,
        _terminal = terminal,
        _fileSystem = fileSystem;
@@ -217,7 +248,6 @@ class AnalysisError implements Comparable<AnalysisError> {
       case AnalysisSeverity.none:
         return writtenError.severity;
     }
-    return null;
   }
 
   String get type => writtenError.type;
@@ -262,14 +292,14 @@ class AnalysisError implements Comparable<AnalysisError> {
 /// [AnalysisError] in plain text content.
 class WrittenError {
   WrittenError._({
-    @required this.severity,
-    @required this.type,
-    @required this.message,
-    @required this.code,
-    @required this.file,
-    @required this.startLine,
-    @required this.startColumn,
-    @required this.offset,
+    required this.severity,
+    required this.type,
+    required this.message,
+    required this.code,
+    required this.file,
+    required this.startLine,
+    required this.startColumn,
+    required this.offset,
   });
 
   ///  {
@@ -286,15 +316,16 @@ class WrittenError {
   ///      "hasFix":false
   ///  }
   static WrittenError fromJson(Map<String, dynamic> json) {
+    final Map<String, dynamic> location = json['location'] as Map<String, dynamic>;
     return WrittenError._(
       severity: json['severity'] as String,
       type: json['type'] as String,
       message: json['message'] as String,
       code: json['code'] as String,
-      file: json['location']['file'] as String,
-      startLine: json['location']['startLine'] as int,
-      startColumn: json['location']['startColumn'] as int,
-      offset: json['location']['offset'] as int,
+      file: location['file'] as String,
+      startLine: location['startLine'] as int,
+      startColumn: location['startColumn'] as int,
+      offset: location['offset'] as int,
     );
   }
 

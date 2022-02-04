@@ -22,9 +22,9 @@ class MDnsObservatoryDiscovery {
   /// automatically select which application to use if multiple are advertising
   /// Dart observatory ports.
   MDnsObservatoryDiscovery({
-    MDnsClient mdnsClient,
-    @required Logger logger,
-    @required Usage flutterUsage,
+    MDnsClient? mdnsClient,
+    required Logger logger,
+    required Usage flutterUsage,
   }): _client = mdnsClient ?? MDnsClient(),
       _logger = logger,
       _flutterUsage = flutterUsage;
@@ -36,7 +36,7 @@ class MDnsObservatoryDiscovery {
   @visibleForTesting
   static const String dartObservatoryName = '_dartobservatory._tcp.local';
 
-  static MDnsObservatoryDiscovery get instance => context.get<MDnsObservatoryDiscovery>();
+  static MDnsObservatoryDiscovery? get instance => context.get<MDnsObservatoryDiscovery>();
 
   /// Executes an mDNS query for a Dart Observatory.
   ///
@@ -56,9 +56,8 @@ class MDnsObservatoryDiscovery {
   /// If it is null and there is only one available instance of Observatory,
   /// it will return that instance's information regardless of what application
   /// the Observatory instance is for.
-  // TODO(jonahwilliams): use `deviceVmservicePort` to filter mdns results.
   @visibleForTesting
-  Future<MDnsObservatoryDiscoveryResult> query({String applicationId, int deviceVmservicePort}) async {
+  Future<MDnsObservatoryDiscoveryResult?> query({String? applicationId, int? deviceVmservicePort}) async {
     _logger.printTrace('Checking for advertised Dart observatories...');
     try {
       await _client.start();
@@ -77,7 +76,7 @@ class MDnsObservatoryDiscovery {
         .map<String>((PtrResourceRecord record) => record.domainName)
         .toSet();
 
-      String domainName;
+      String? domainName;
       if (applicationId != null) {
         for (final String name in uniqueDomainNames) {
           if (name.toLowerCase().startsWith(applicationId.toLowerCase())) {
@@ -92,7 +91,7 @@ class MDnsObservatoryDiscovery {
         final StringBuffer buffer = StringBuffer();
         buffer.writeln('There are multiple observatory ports available.');
         buffer.writeln('Rerun this command with one of the following passed in as the appId:');
-        buffer.writeln('');
+        buffer.writeln();
         for (final String uniqueDomainName in uniqueDomainNames) {
           buffer.writeln('  flutter attach --app-id ${uniqueDomainName.replaceAll('.$dartObservatoryName', '')}');
         }
@@ -111,7 +110,7 @@ class MDnsObservatoryDiscovery {
         return null;
       }
       if (srv.length > 1) {
-        _logger.printError('Unexpectedly found more than one observatory report for $domainName '
+        _logger.printWarning('Unexpectedly found more than one observatory report for $domainName '
                    '- using first one (${srv.first.port}).');
       }
       _logger.printTrace('Checking for authentication code for $domainName');
@@ -119,15 +118,18 @@ class MDnsObservatoryDiscovery {
         .lookup<TxtResourceRecord>(
             ResourceRecordQuery.text(domainName),
         )
-        ?.toList();
+        .toList();
       if (txt == null || txt.isEmpty) {
         return MDnsObservatoryDiscoveryResult(srv.first.port, '');
       }
       const String authCodePrefix = 'authCode=';
-      final String raw = txt.first.text.split('\n').firstWhere(
-        (String s) => s.startsWith(authCodePrefix),
-        orElse: () => null,
-      );
+      String? raw;
+      for (final String record in txt.first.text.split('\n')) {
+        if (record.startsWith(authCodePrefix)) {
+          raw = record;
+          break;
+        }
+      }
       if (raw == null) {
         return MDnsObservatoryDiscoveryResult(srv.first.port, '');
       }
@@ -143,12 +145,12 @@ class MDnsObservatoryDiscovery {
     }
   }
 
-  Future<Uri> getObservatoryUri(String applicationId, Device device, {
+  Future<Uri?> getObservatoryUri(String applicationId, Device device, {
     bool usesIpv6 = false,
-    int hostVmservicePort,
-    int deviceVmservicePort,
+    int? hostVmservicePort,
+    int? deviceVmservicePort,
   }) async {
-    final MDnsObservatoryDiscoveryResult result = await query(
+    final MDnsObservatoryDiscoveryResult? result = await query(
       applicationId: applicationId,
       deviceVmservicePort: deviceVmservicePort,
     );
@@ -160,7 +162,7 @@ class MDnsObservatoryDiscovery {
     final String host = usesIpv6
       ? InternetAddress.loopbackIPv6.address
       : InternetAddress.loopbackIPv4.address;
-    return await buildObservatoryUri(
+    return buildObservatoryUri(
       device,
       host,
       result.port,
@@ -203,7 +205,20 @@ class MDnsObservatoryDiscovery {
           'See https://github.com/flutter/flutter/issues/46698 for details.'
         );
         break;
-      default:
+      case TargetPlatform.android:
+      case TargetPlatform.android_arm:
+      case TargetPlatform.android_arm64:
+      case TargetPlatform.android_x64:
+      case TargetPlatform.android_x86:
+      case TargetPlatform.darwin:
+      case TargetPlatform.fuchsia_arm64:
+      case TargetPlatform.fuchsia_x64:
+      case TargetPlatform.linux_arm64:
+      case TargetPlatform.linux_x64:
+      case TargetPlatform.tester:
+      case TargetPlatform.web_javascript:
+      case TargetPlatform.windows_uwp_x64:
+      case TargetPlatform.windows_x64:
         _logger.printTrace('No interface with an ipv4 link local address was found.');
         break;
     }
@@ -232,8 +247,8 @@ Future<Uri> buildObservatoryUri(
   Device device,
   String host,
   int devicePort, [
-  int hostVmservicePort,
-  String authCode,
+  int? hostVmservicePort,
+  String? authCode,
 ]) async {
   String path = '/';
   if (authCode != null) {
@@ -245,8 +260,8 @@ Future<Uri> buildObservatoryUri(
     path += '/';
   }
   hostVmservicePort ??= 0;
-  final int actualHostPort = hostVmservicePort == 0 ?
-    await device.portForwarder.forward(devicePort) :
+  final int? actualHostPort = hostVmservicePort == 0 ?
+    await device.portForwarder?.forward(devicePort) :
     hostVmservicePort;
   return Uri(scheme: 'http', host: host, port: actualHostPort, path: path);
 }

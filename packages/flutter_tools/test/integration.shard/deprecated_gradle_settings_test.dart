@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// @dart = 2.8
+
 import 'package:file_testing/file_testing.dart';
 import 'package:flutter_tools/src/base/io.dart';
 
@@ -24,8 +26,10 @@ void main() {
       '--target-platform', 'android-arm',
       '--verbose',
     ], workingDirectory: woringDirectory);
-    print(result.stdout);
-    print(result.stderr);
+
+    printOnFailure('Output of flutter build apk:');
+    printOnFailure(result.stdout.toString());
+    printOnFailure(result.stderr.toString());
 
     expect(result.exitCode, 0);
 

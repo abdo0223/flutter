@@ -5,14 +5,14 @@
 import 'package:file/memory.dart';
 import 'package:flutter_tools/src/android/android_device.dart';
 import 'package:flutter_tools/src/android/android_sdk.dart';
-import 'package:flutter_tools/src/application_package.dart';
+import 'package:flutter_tools/src/android/application_package.dart';
 import 'package:flutter_tools/src/base/file_system.dart';
 import 'package:flutter_tools/src/base/logger.dart';
 import 'package:flutter_tools/src/base/platform.dart';
-import 'package:mockito/mockito.dart';
+import 'package:test/fake.dart';
 
 import '../../src/common.dart';
-import '../../src/context.dart';
+import '../../src/fake_process_manager.dart';
 
 const FakeCommand kAdbVersionCommand = FakeCommand(
   command: <String>['adb', 'version'],
@@ -39,8 +39,8 @@ const FakeCommand kStoreShaCommand = FakeCommand(
 );
 
 void main() {
-  FileSystem fileSystem;
-  BufferLogger logger;
+  late FileSystem fileSystem;
+  late BufferLogger logger;
 
   setUp(() {
     fileSystem = MemoryFileSystem.test();
@@ -48,15 +48,16 @@ void main() {
   });
 
   AndroidDevice setUpAndroidDevice({
-    AndroidSdk androidSdk,
-    ProcessManager processManager,
+    AndroidSdk? androidSdk,
+    ProcessManager? processManager,
   }) {
     androidSdk ??= FakeAndroidSdk();
     return AndroidDevice('1234',
+      modelID: 'TestModel',
       logger: logger,
-      platform: FakePlatform(operatingSystem: 'linux'),
+      platform: FakePlatform(),
       androidSdk: androidSdk,
-      fileSystem: fileSystem ?? MemoryFileSystem.test(),
+      fileSystem: fileSystem,
       processManager: processManager ?? FakeProcessManager.any(),
     );
   }
@@ -82,7 +83,7 @@ void main() {
     );
 
     expect(await androidDevice.installApp(androidApk), false);
-    expect(processManager.hasRemainingExpectations, false);
+    expect(processManager, hasNoRemainingExpectations);
   });
 
   testWithoutContext('Cannot install app if APK file is missing', () async {
@@ -126,7 +127,7 @@ void main() {
     );
 
     expect(await androidDevice.installApp(androidApk, userIdentifier: '10'), true);
-    expect(processManager.hasRemainingExpectations, false);
+    expect(processManager, hasNoRemainingExpectations);
   });
 
   testWithoutContext('Defaults to API level 16 if adb returns a null response', () async {
@@ -155,7 +156,7 @@ void main() {
     );
 
     expect(await androidDevice.installApp(androidApk, userIdentifier: '10'), true);
-    expect(processManager.hasRemainingExpectations, false);
+    expect(processManager, hasNoRemainingExpectations);
   });
 
   testWithoutContext('displays error if user not found', () async {
@@ -200,7 +201,7 @@ void main() {
 
     expect(await androidDevice.installApp(androidApk, userIdentifier: 'jane'), false);
     expect(logger.errorText, contains('Error: User "jane" not found. Run "adb shell pm list users" to see list of available identifiers.'));
-    expect(processManager.hasRemainingExpectations, false);
+    expect(processManager, hasNoRemainingExpectations);
   });
 
   testWithoutContext('Will skip install if the correct version is up to date', () async {
@@ -233,7 +234,7 @@ void main() {
     );
 
     expect(await androidDevice.installApp(androidApk, userIdentifier: '10'), true);
-    expect(processManager.hasRemainingExpectations, false);
+    expect(processManager, hasNoRemainingExpectations);
   });
 
   testWithoutContext('Will uninstall if the correct version is not up to date and install fails', () async {
@@ -274,7 +275,7 @@ void main() {
     );
 
     expect(await androidDevice.installApp(androidApk, userIdentifier: '10'), true);
-    expect(processManager.hasRemainingExpectations, false);
+    expect(processManager, hasNoRemainingExpectations);
   });
 
   testWithoutContext('Will fail to install if the apk was never installed and it fails the first time', () async {
@@ -307,7 +308,7 @@ void main() {
     );
 
     expect(await androidDevice.installApp(androidApk, userIdentifier: '10'), false);
-    expect(processManager.hasRemainingExpectations, false);
+    expect(processManager, hasNoRemainingExpectations);
   });
 }
 

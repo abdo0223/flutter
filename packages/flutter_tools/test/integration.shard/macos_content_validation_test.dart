@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// @dart = 2.8
+
 import 'package:file_testing/file_testing.dart';
 import 'package:flutter_tools/src/base/file_system.dart';
 import 'package:flutter_tools/src/base/io.dart';
@@ -32,18 +34,31 @@ void main() {
         'clean',
       ], workingDirectory: workingDirectory);
 
-      final ProcessResult result = processManager.runSync(<String>[
+      final File podfile = fileSystem.file(fileSystem.path.join(workingDirectory, 'macos', 'Podfile'));
+      final File podfileLock = fileSystem.file(fileSystem.path.join(workingDirectory, 'macos', 'Podfile.lock'));
+      expect(podfile, exists);
+      expect(podfileLock, exists);
+
+      // Simulate a newer Podfile than Podfile.lock.
+      podfile.setLastModifiedSync(DateTime.now());
+      podfileLock.setLastModifiedSync(DateTime.now().subtract(const Duration(days: 1)));
+      expect(podfileLock.lastModifiedSync().isBefore(podfile.lastModifiedSync()), isTrue);
+
+      final List<String> buildCommand = <String>[
         flutterBin,
         ...getLocalEngineArguments(),
         'build',
         'macos',
         '--$buildModeLower',
-      ], workingDirectory: workingDirectory);
+      ];
+      final ProcessResult result = processManager.runSync(buildCommand, workingDirectory: workingDirectory);
 
-      print(result.stdout);
-      print(result.stderr);
-
+      printOnFailure('Output of flutter build macos:');
+      printOnFailure(result.stdout.toString());
+      printOnFailure(result.stderr.toString());
       expect(result.exitCode, 0);
+
+      expect(result.stdout, contains('Running pod install'));
 
       final Directory outputApp = fileSystem.directory(fileSystem.path.join(
         workingDirectory,
@@ -54,6 +69,7 @@ void main() {
         buildMode,
         'flutter_gallery.app',
       ));
+      expect(podfile.lastModifiedSync().isBefore(podfileLock.lastModifiedSync()), isTrue);
 
       final Directory outputAppFramework =
           fileSystem.directory(fileSystem.path.join(
@@ -105,7 +121,7 @@ void main() {
       expect(outputFlutterFramework.childDirectory('Modules'), isNot(exists));
 
       // Archiving should contain a bitcode blob, but not building.
-      // This mimics Xcode behavior and present a developer from having to install a
+      // This mimics Xcode behavior and prevents a developer from having to install a
       // 300+MB app.
       final File outputFlutterFrameworkBinary = outputFlutterFramework
           .childDirectory('Versions')
@@ -116,13 +132,21 @@ void main() {
         isFalse,
       );
 
+      // Build again without cleaning.
+      final ProcessResult secondBuild = processManager.runSync(buildCommand, workingDirectory: workingDirectory);
+
+      printOnFailure('Output of second build:');
+      printOnFailure(secondBuild.stdout.toString());
+      printOnFailure(secondBuild.stderr.toString());
+      expect(secondBuild.exitCode, 0);
+
+      expect(secondBuild.stdout, isNot(contains('Running pod install')));
+
       processManager.runSync(<String>[
         flutterBin,
         ...getLocalEngineArguments(),
         'clean',
       ], workingDirectory: workingDirectory);
-    }, skip: !platform.isMacOS,
-       timeout: const Timeout(Duration(minutes: 5)),
-    );
+    }, skip: !platform.isMacOS); // [intended] only makes sense for macos platform.
   }
 }

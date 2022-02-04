@@ -102,6 +102,12 @@ abstract class MaterialLocalizations {
   /// The tooltip for the [MonthPicker]'s "previous month" button.
   String get previousMonthTooltip;
 
+  /// The tooltip for the [PaginatedDataTable]'s "first page" button.
+  String get firstPageTooltip;
+
+  /// The tooltip for the [PaginatedDataTable]'s "last page" button.
+  String get lastPageTooltip;
+
   /// The tooltip for the [PaginatedDataTable]'s "next page" button.
   String get nextPageTooltip;
 
@@ -442,7 +448,7 @@ abstract class MaterialLocalizations {
   /// Tooltip used to put the time picker into [TimePickerEntryMode.input].
   String get inputTimeModeButtonLabel;
 
-  /// The semantics label used to indicate which account is signed in in the
+  /// The semantics label used to indicate which account is signed in the
   /// [UserAccountsDrawerHeader] widget.
   String get signedInLabel;
 
@@ -630,8 +636,11 @@ class DefaultMaterialLocalizations implements MaterialLocalizations {
         return formatDecimal(timeOfDay.hourOfPeriod == 0 ? 12 : timeOfDay.hourOfPeriod);
       case TimeOfDayFormat.HH_colon_mm:
         return _formatTwoDigitZeroPad(timeOfDay.hour);
-      default:
-        throw AssertionError('$runtimeType does not support $format.');
+      case TimeOfDayFormat.a_space_h_colon_mm:
+      case TimeOfDayFormat.frenchCanadian:
+      case TimeOfDayFormat.H_colon_mm:
+      case TimeOfDayFormat.HH_dot_mm:
+         throw AssertionError('$runtimeType does not support $format.');
     }
   }
 
@@ -756,10 +765,10 @@ class DefaultMaterialLocalizations implements MaterialLocalizations {
   String get dateRangeEndLabel => 'End Date';
 
   @override
-  String dateRangeStartDateSemanticLabel(String fullDate) => 'Start date $fullDate';
+  String dateRangeStartDateSemanticLabel(String formattedDate) => 'Start date $formattedDate';
 
   @override
-  String dateRangeEndDateSemanticLabel(String fullDate) => 'End date $fullDate';
+  String dateRangeEndDateSemanticLabel(String formattedDate) => 'End date $formattedDate';
 
   @override
   String get invalidDateFormatLabel => 'Invalid format.';
@@ -887,6 +896,12 @@ class DefaultMaterialLocalizations implements MaterialLocalizations {
 
   @override
   String get previousPageTooltip => 'Previous page';
+
+  @override
+  String get firstPageTooltip => 'First page';
+
+  @override
+  String get lastPageTooltip => 'Last page';
 
   @override
   String get showMenuTooltip => 'Show menu';

@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+<<<<<<< HEAD
 import 'dart:ui' as ui
     show
         ParagraphStyle,
@@ -11,12 +12,17 @@ import 'dart:ui' as ui
         Shadow,
         FontFeature,
         TextHeightBehavior;
+=======
+
+import 'dart:ui' as ui show ParagraphStyle, TextStyle, StrutStyle, lerpDouble, Shadow, FontFeature, TextHeightBehavior, TextLeadingDistribution;
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
 
 import 'package:flutter/foundation.dart';
 
 import 'basic_types.dart';
 import 'colors.dart';
 import 'strut_style.dart';
+import 'text_painter.dart';
 
 const String _kDefaultDebugLabel = 'unknown';
 
@@ -48,7 +54,7 @@ const double _kDefaultFontSize = 14.0;
 /// ![Applying the style in this way creates bold text.](https://flutter.github.io/assets-for-api-docs/assets/painting/text_style_bold.png)
 ///
 /// ```dart
-/// Text(
+/// const Text(
 ///   'No, we need bold strokes. We need this plan.',
 ///   style: TextStyle(fontWeight: FontWeight.bold),
 /// )
@@ -64,7 +70,7 @@ const double _kDefaultFontSize = 14.0;
 /// ![This results in italicized text.](https://flutter.github.io/assets-for-api-docs/assets/painting/text_style_italics.png)
 ///
 /// ```dart
-/// Text(
+/// const Text(
 ///   "Welcome to the present, we're running a real nation.",
 ///   style: TextStyle(fontStyle: FontStyle.italic),
 /// )
@@ -146,7 +152,7 @@ const double _kDefaultFontSize = 14.0;
 /// 50 pixels.
 ///
 /// ```dart
-/// Text(
+/// const Text(
 ///   'Ladies and gentlemen, you coulda been anywhere in the world tonight, but you’re here with us in New York City.',
 ///   style: TextStyle(height: 5, fontSize: 10),
 /// )
@@ -158,6 +164,47 @@ const double _kDefaultFontSize = 14.0;
 /// ![Since the explicit line height is applied as a scale factor on the font-metrics-defined line height, the gap above the text grows faster, as the height grows, than the gap below the text.](https://flutter.github.io/assets-for-api-docs/assets/painting/text_height_comparison_diagram.png)
 ///
 /// See [StrutStyle] for further control of line height at the paragraph level.
+///
+/// ### Leading Distribution and Trimming
+///
+/// [Leading](https://en.wikipedia.org/wiki/Leading) is the vertical space
+/// between glyphs from adjacent lines. Quantitatively, it is the line height
+/// (see the previous section) subtracted by the font's ascent and descent.
+/// It's possible to have a negative `Leading` if [height] is sufficiently
+/// small.
+///
+/// When the [height] multiplier is null, `leading` and how it is distributed
+/// is up to the font's
+/// [metrics](https://en.wikipedia.org/wiki/Typeface#Font_metrics).
+/// When the [height] multiplier is specified, the exact behavior can be
+/// configured via [leadingDistribution] and [TextPainter.textHeightBehavior].
+///
+/// ![In configuration 1 the line height is divided by the alphabetic baseline proportionally to the font's ascent and descent, in configuration 3 the glyphs are roughly centered within the line height, configuration 2 is similar to configuration 1 except the Text Top guide on the same line as the font's ascent](https://flutter.github.io/assets-for-api-docs/assets/painting/text_height_breakdown.png)
+///
+/// Above is a side-by-side comparison of different [leadingDistribution] and
+/// [TextPainter.textHeightBehavior] combinations.
+///
+///  * Configuration 1: The default. [leadingDistribution] is set to [TextLeadingDistribution.proportional].
+///  * Configuration 2: same as Configuration 1, except [TextHeightBehavior.applyHeightToFirstAscent] is set to false.
+///  * Configuration 3: [leadingDistribution] is set to [TextLeadingDistribution.even].
+///  * Configuration 4: same as Configuration 3, except [TextHeightBehavior.applyHeightToLastDescent] is set to false.
+///
+/// The [leadingDistribution] property controls how leading is distributed over
+/// and under the text. With [TextLeadingDistribution.proportional]
+/// (Configuration 1), `Top Leading : Bottom Leading = Font Ascent : Font
+/// Descent`, which also means the alphabetic baseline divides the line height
+/// into 2 parts proportional to the font's ascent and descent. With
+/// [TextLeadingDistribution.even] (Configuration 3), `Top Leading` equals
+/// `Bottom Leading`, and the glyphs are roughly centered within the allotted
+/// line height.
+///
+/// The [TextPainter.textHeightBehavior] is a property that controls leading at
+/// the paragraph level. The `applyHeightToFirstAscent` property is applied
+/// **after** [height] and [leadingDistribution]. Setting it to false trims the
+/// "Top Leading" of the text box to match the font's ascent if it's on the
+/// first line (see Configuration 2). Similarly setting
+/// `applyHeightToLastDescent` to false reduces "Bottom Leading" to 0 for the
+/// last line of text (Configuration 4).
 ///
 /// ### Wavy red underline with black text
 ///
@@ -172,7 +219,7 @@ const double _kDefaultFontSize = 14.0;
 ///
 /// ```dart
 /// RichText(
-///   text: TextSpan(
+///   text: const TextSpan(
 ///     text: "Don't tax the South ",
 ///     children: <TextSpan>[
 ///       TextSpan(
@@ -343,6 +390,16 @@ const double _kDefaultFontSize = 14.0;
 /// ```
 /// {@end-tool}
 ///
+/// #### Supported font formats
+///
+/// Font formats currently supported by Flutter :
+///
+///  * `.ttc`
+///  * `.ttf`
+///  * `.otf`
+///
+/// Flutter does not support `.woff` and `.woff2` fonts for all platforms.
+///
 /// ### Custom Font Fallback
 ///
 /// A custom [fontFamilyFallback] list can be provided. The list should be an
@@ -382,6 +439,16 @@ const double _kDefaultFontSize = 14.0;
 /// or no custom fallback was provided, the platform font fallback will be used.
 ///
 /// ### Inconsistent platform fonts
+///
+/// By default, fonts differ depending on the platform.
+///
+///  * The default font-family for `Android`,`Fuchsia` and `Linux` is `Roboto`.
+///  * The default font-family for `iOS` is `.SF UI Display`/`.SF UI Text`.
+///  * The default font-family for `MacOS` is `.AppleSystemUIFont`.
+///  * The default font-family for `Windows` is `Segoe UI`.
+//
+// The implementation of these defaults can be found in:
+// /packages/flutter/lib/src/material/typography.dart
 ///
 /// Since Flutter's font discovery for default fonts depends on the fonts present
 /// on the device, it is not safe to assume all default fonts will be available or
@@ -424,6 +491,7 @@ class TextStyle with Diagnosticable {
     this.wordSpacing,
     this.textBaseline,
     this.height,
+    this.leadingDistribution,
     this.locale,
     this.foreground,
     this.background,
@@ -437,6 +505,7 @@ class TextStyle with Diagnosticable {
     String? fontFamily,
     List<String>? fontFamilyFallback,
     String? package,
+<<<<<<< HEAD
   })  : fontFamily =
             package == null ? fontFamily : 'packages/$package/$fontFamily',
         _fontFamilyFallback = fontFamilyFallback,
@@ -445,6 +514,16 @@ class TextStyle with Diagnosticable {
         assert(color == null || foreground == null, _kColorForegroundWarning),
         assert(backgroundColor == null || background == null,
             _kColorBackgroundWarning);
+=======
+    this.overflow,
+  }) : fontFamily = package == null ? fontFamily : 'packages/$package/$fontFamily',
+       _fontFamilyFallback = fontFamilyFallback,
+       _package = package,
+       assert(inherit != null),
+       assert(color == null || foreground == null, _kColorForegroundWarning),
+       assert(backgroundColor == null || background == null, _kColorBackgroundWarning);
+
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
 
   /// Whether null values are replaced with their value in an ancestor text
   /// style (e.g., in a [TextSpan] tree).
@@ -572,8 +651,25 @@ class TextStyle with Diagnosticable {
   ///
   /// ![Since the explicit line height is applied as a scale factor on the font-metrics-defined line height, the gap above the text grows faster, as the height grows, than the gap below the text.](https://flutter.github.io/assets-for-api-docs/assets/painting/text_height_comparison_diagram.png)
   ///
-  /// See [StrutStyle] for further control of line height at the paragraph level.
+  /// See [StrutStyle] and [TextHeightBehavior] for further control of line
+  /// height at the paragraph level.
   final double? height;
+
+  /// How the vertical space added by the [height] multiplier should be
+  /// distributed over and under the text.
+  ///
+  /// When a non-null [height] is specified, after accommodating the glyphs of
+  /// the text, the remaining vertical space from the allotted line height will
+  /// be distributed over and under the text, according to the
+  /// [leadingDistribution] property. See the [TextStyle] class's documentation
+  /// for an example.
+  ///
+  /// When [height] is null, [leadingDistribution] does not affect the text
+  /// layout.
+  ///
+  /// Defaults to null, which defers to the paragraph's
+  /// `ParagraphStyle.textHeightBehavior`'s `leadingDistribution`.
+  final ui.TextLeadingDistribution? leadingDistribution;
 
   /// The locale used to select region-specific glyphs.
   ///
@@ -642,7 +738,7 @@ class TextStyle with Diagnosticable {
   /// decoration.
   ///
   /// ```dart
-  /// Text(
+  /// const Text(
   ///   'This has a very BOLD strike through!',
   ///   style: TextStyle(
   ///     decoration: TextDecoration.lineThrough,
@@ -657,7 +753,7 @@ class TextStyle with Diagnosticable {
   /// are misspelled) by using a [decorationThickness] < 1.0.
   ///
   /// ```dart
-  /// Text(
+  /// const Text(
   ///   'oopsIforgottousespaces!',
   ///   style: TextStyle(
   ///     decoration: TextDecoration.underline,
@@ -704,6 +800,20 @@ class TextStyle with Diagnosticable {
   /// these variants will be used for rendering.
   final List<ui.FontFeature>? fontFeatures;
 
+  /// How visual text overflow should be handled.
+  final TextOverflow? overflow;
+
+  // Return the original value of fontFamily, without the additional
+  // "packages/$_package/" prefix.
+  String? get _fontFamily {
+    if (_package != null && fontFamily != null) {
+      final String fontFamilyPrefix = 'packages/$_package/';
+      assert(fontFamily!.startsWith(fontFamilyPrefix));
+      return fontFamily!.substring(fontFamilyPrefix.length);
+    }
+    return fontFamily;
+  }
+
   /// Creates a copy of this text style but with the given fields replaced with
   /// the new values.
   ///
@@ -717,8 +827,6 @@ class TextStyle with Diagnosticable {
     bool? inherit,
     Color? color,
     Color? backgroundColor,
-    String? fontFamily,
-    List<String>? fontFamilyFallback,
     double? fontSize,
     FontWeight? fontWeight,
     FontStyle? fontStyle,
@@ -726,6 +834,7 @@ class TextStyle with Diagnosticable {
     double? wordSpacing,
     TextBaseline? textBaseline,
     double? height,
+    ui.TextLeadingDistribution? leadingDistribution,
     Locale? locale,
     Paint? foreground,
     Paint? background,
@@ -736,6 +845,10 @@ class TextStyle with Diagnosticable {
     TextDecorationStyle? decorationStyle,
     double? decorationThickness,
     String? debugLabel,
+    String? fontFamily,
+    List<String>? fontFamilyFallback,
+    String? package,
+    TextOverflow? overflow,
   }) {
     assert(color == null || foreground == null, _kColorForegroundWarning);
     assert(backgroundColor == null || background == null,
@@ -746,8 +859,10 @@ class TextStyle with Diagnosticable {
         newDebugLabel = debugLabel ?? '(${this.debugLabel}).copyWith';
       return true;
     }());
+
     return TextStyle(
       inherit: inherit ?? this.inherit,
+<<<<<<< HEAD
       color: this.foreground == null && foreground == null
           ? color ?? this.color
           : null,
@@ -756,6 +871,10 @@ class TextStyle with Diagnosticable {
           : null,
       fontFamily: fontFamily ?? this.fontFamily,
       fontFamilyFallback: fontFamilyFallback ?? this.fontFamilyFallback,
+=======
+      color: this.foreground == null && foreground == null ? color ?? this.color : null,
+      backgroundColor: this.background == null && background == null ? backgroundColor ?? this.backgroundColor : null,
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
       fontSize: fontSize ?? this.fontSize,
       fontWeight: fontWeight ?? this.fontWeight,
       fontStyle: fontStyle ?? this.fontStyle,
@@ -763,6 +882,7 @@ class TextStyle with Diagnosticable {
       wordSpacing: wordSpacing ?? this.wordSpacing,
       textBaseline: textBaseline ?? this.textBaseline,
       height: height ?? this.height,
+      leadingDistribution: leadingDistribution ?? this.leadingDistribution,
       locale: locale ?? this.locale,
       foreground: foreground ?? this.foreground,
       background: background ?? this.background,
@@ -773,6 +893,10 @@ class TextStyle with Diagnosticable {
       decorationStyle: decorationStyle ?? this.decorationStyle,
       decorationThickness: decorationThickness ?? this.decorationThickness,
       debugLabel: newDebugLabel,
+      fontFamily: fontFamily ?? _fontFamily,
+      fontFamilyFallback: fontFamilyFallback ?? this.fontFamilyFallback,
+      package: package ?? _package,
+      overflow: overflow ?? this.overflow,
     );
   }
 
@@ -826,9 +950,12 @@ class TextStyle with Diagnosticable {
     double heightFactor = 1.0,
     double heightDelta = 0.0,
     TextBaseline? textBaseline,
+    ui.TextLeadingDistribution? leadingDistribution,
     Locale? locale,
     List<ui.Shadow>? shadows,
     List<ui.FontFeature>? fontFeatures,
+    String? package,
+    TextOverflow? overflow,
   }) {
     assert(fontSizeFactor != null);
     assert(fontSizeDelta != null);
@@ -859,9 +986,14 @@ class TextStyle with Diagnosticable {
     return TextStyle(
       inherit: inherit,
       color: foreground == null ? color ?? this.color : null,
+<<<<<<< HEAD
       backgroundColor:
           background == null ? backgroundColor ?? this.backgroundColor : null,
       fontFamily: fontFamily ?? this.fontFamily,
+=======
+      backgroundColor: background == null ? backgroundColor ?? this.backgroundColor : null,
+      fontFamily: fontFamily ?? _fontFamily,
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
       fontFamilyFallback: fontFamilyFallback ?? this.fontFamilyFallback,
       fontSize:
           fontSize == null ? null : fontSize! * fontSizeFactor + fontSizeDelta,
@@ -878,6 +1010,7 @@ class TextStyle with Diagnosticable {
           : wordSpacing! * wordSpacingFactor + wordSpacingDelta,
       textBaseline: textBaseline ?? this.textBaseline,
       height: height == null ? null : height! * heightFactor + heightDelta,
+      leadingDistribution: leadingDistribution ?? this.leadingDistribution,
       locale: locale ?? this.locale,
       foreground: foreground,
       background: background,
@@ -886,10 +1019,16 @@ class TextStyle with Diagnosticable {
       decoration: decoration ?? this.decoration,
       decorationColor: decorationColor ?? this.decorationColor,
       decorationStyle: decorationStyle ?? this.decorationStyle,
+<<<<<<< HEAD
       decorationThickness: decorationThickness == null
           ? null
           : decorationThickness! * decorationThicknessFactor +
               decorationThicknessDelta,
+=======
+      decorationThickness: decorationThickness == null ? null : decorationThickness! * decorationThicknessFactor + decorationThicknessDelta,
+      overflow: overflow ?? this.overflow,
+      package: package ?? _package,
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
       debugLabel: modifiedDebugLabel,
     );
   }
@@ -930,8 +1069,6 @@ class TextStyle with Diagnosticable {
     return copyWith(
       color: other.color,
       backgroundColor: other.backgroundColor,
-      fontFamily: other.fontFamily,
-      fontFamilyFallback: other.fontFamilyFallback,
       fontSize: other.fontSize,
       fontWeight: other.fontWeight,
       fontStyle: other.fontStyle,
@@ -939,6 +1076,7 @@ class TextStyle with Diagnosticable {
       wordSpacing: other.wordSpacing,
       textBaseline: other.textBaseline,
       height: other.height,
+      leadingDistribution: other.leadingDistribution,
       locale: other.locale,
       foreground: other.foreground,
       background: other.background,
@@ -949,6 +1087,10 @@ class TextStyle with Diagnosticable {
       decorationStyle: other.decorationStyle,
       decorationThickness: other.decorationThickness,
       debugLabel: mergedDebugLabel,
+      fontFamily: other._fontFamily,
+      fontFamilyFallback: other.fontFamilyFallback,
+      package: other._package,
+      overflow: other.overflow,
     );
   }
 
@@ -984,8 +1126,6 @@ class TextStyle with Diagnosticable {
         inherit: b!.inherit,
         color: Color.lerp(null, b.color, t),
         backgroundColor: Color.lerp(null, b.backgroundColor, t),
-        fontFamily: t < 0.5 ? null : b.fontFamily,
-        fontFamilyFallback: t < 0.5 ? null : b.fontFamilyFallback,
         fontSize: t < 0.5 ? null : b.fontSize,
         fontWeight: FontWeight.lerp(null, b.fontWeight, t),
         fontStyle: t < 0.5 ? null : b.fontStyle,
@@ -993,16 +1133,21 @@ class TextStyle with Diagnosticable {
         wordSpacing: t < 0.5 ? null : b.wordSpacing,
         textBaseline: t < 0.5 ? null : b.textBaseline,
         height: t < 0.5 ? null : b.height,
+        leadingDistribution: t < 0.5 ? null : b.leadingDistribution,
         locale: t < 0.5 ? null : b.locale,
         foreground: t < 0.5 ? null : b.foreground,
         background: t < 0.5 ? null : b.background,
-        decoration: t < 0.5 ? null : b.decoration,
         shadows: t < 0.5 ? null : b.shadows,
         fontFeatures: t < 0.5 ? null : b.fontFeatures,
+        decoration: t < 0.5 ? null : b.decoration,
         decorationColor: Color.lerp(null, b.decorationColor, t),
         decorationStyle: t < 0.5 ? null : b.decorationStyle,
         decorationThickness: t < 0.5 ? null : b.decorationThickness,
         debugLabel: lerpDebugLabel,
+        fontFamily: t < 0.5 ? null : b._fontFamily,
+        fontFamilyFallback: t < 0.5 ? null : b.fontFamilyFallback,
+        package: t < 0.5 ? null : b._package,
+        overflow: t < 0.5 ? null : b.overflow,
       );
     }
 
@@ -1011,8 +1156,6 @@ class TextStyle with Diagnosticable {
         inherit: a.inherit,
         color: Color.lerp(a.color, null, t),
         backgroundColor: Color.lerp(null, a.backgroundColor, t),
-        fontFamily: t < 0.5 ? a.fontFamily : null,
-        fontFamilyFallback: t < 0.5 ? a.fontFamilyFallback : null,
         fontSize: t < 0.5 ? a.fontSize : null,
         fontWeight: FontWeight.lerp(a.fontWeight, null, t),
         fontStyle: t < 0.5 ? a.fontStyle : null,
@@ -1020,6 +1163,7 @@ class TextStyle with Diagnosticable {
         wordSpacing: t < 0.5 ? a.wordSpacing : null,
         textBaseline: t < 0.5 ? a.textBaseline : null,
         height: t < 0.5 ? a.height : null,
+        leadingDistribution: t < 0.5 ? a.leadingDistribution : null,
         locale: t < 0.5 ? a.locale : null,
         foreground: t < 0.5 ? a.foreground : null,
         background: t < 0.5 ? a.background : null,
@@ -1030,11 +1174,16 @@ class TextStyle with Diagnosticable {
         decorationStyle: t < 0.5 ? a.decorationStyle : null,
         decorationThickness: t < 0.5 ? a.decorationThickness : null,
         debugLabel: lerpDebugLabel,
+        fontFamily: t < 0.5 ? a._fontFamily : null,
+        fontFamilyFallback: t < 0.5 ? a.fontFamilyFallback : null,
+        package: t < 0.5 ? a._package : null,
+        overflow: t < 0.5 ? a.overflow : null,
       );
     }
 
     return TextStyle(
       inherit: b.inherit,
+<<<<<<< HEAD
       color: a.foreground == null && b.foreground == null
           ? Color.lerp(a.color, b.color, t)
           : null,
@@ -1045,6 +1194,11 @@ class TextStyle with Diagnosticable {
       fontFamilyFallback: t < 0.5 ? a.fontFamilyFallback : b.fontFamilyFallback,
       fontSize:
           ui.lerpDouble(a.fontSize ?? b.fontSize, b.fontSize ?? a.fontSize, t),
+=======
+      color: a.foreground == null && b.foreground == null ? Color.lerp(a.color, b.color, t) : null,
+      backgroundColor: a.background == null && b.background == null ? Color.lerp(a.backgroundColor, b.backgroundColor, t) : null,
+      fontSize: ui.lerpDouble(a.fontSize ?? b.fontSize, b.fontSize ?? a.fontSize, t),
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
       fontWeight: FontWeight.lerp(a.fontWeight, b.fontWeight, t),
       fontStyle: t < 0.5 ? a.fontStyle : b.fontStyle,
       letterSpacing: ui.lerpDouble(a.letterSpacing ?? b.letterSpacing,
@@ -1053,6 +1207,7 @@ class TextStyle with Diagnosticable {
           a.wordSpacing ?? b.wordSpacing, b.wordSpacing ?? a.wordSpacing, t),
       textBaseline: t < 0.5 ? a.textBaseline : b.textBaseline,
       height: ui.lerpDouble(a.height ?? b.height, b.height ?? a.height, t),
+      leadingDistribution: t < 0.5 ? a.leadingDistribution : b.leadingDistribution,
       locale: t < 0.5 ? a.locale : b.locale,
       foreground: (a.foreground != null || b.foreground != null)
           ? t < 0.5
@@ -1074,6 +1229,10 @@ class TextStyle with Diagnosticable {
           b.decorationThickness ?? a.decorationThickness,
           t),
       debugLabel: lerpDebugLabel,
+      fontFamily: t < 0.5 ? a._fontFamily : b._fontFamily,
+      fontFamilyFallback: t < 0.5 ? a.fontFamilyFallback : b.fontFamilyFallback,
+      package: t < 0.5 ? a._package : b._package,
+      overflow: t < 0.5 ? a.overflow : b.overflow,
     );
   }
 
@@ -1088,6 +1247,7 @@ class TextStyle with Diagnosticable {
       fontWeight: fontWeight,
       fontStyle: fontStyle,
       textBaseline: textBaseline,
+      leadingDistribution: leadingDistribution,
       fontFamily: fontFamily,
       fontFamilyFallback: fontFamilyFallback,
       fontSize: fontSize == null ? null : fontSize! * textScaleFactor,
@@ -1130,6 +1290,9 @@ class TextStyle with Diagnosticable {
   }) {
     assert(textScaleFactor != null);
     assert(maxLines == null || maxLines > 0);
+    final ui.TextLeadingDistribution? leadingDistribution = this.leadingDistribution;
+    final ui.TextHeightBehavior? effectiveTextHeightBehavior = textHeightBehavior
+      ?? (leadingDistribution == null ? null : ui.TextHeightBehavior(leadingDistribution: leadingDistribution));
     return ui.ParagraphStyle(
       textAlign: textAlign,
       textDirection: textDirection,
@@ -1141,6 +1304,7 @@ class TextStyle with Diagnosticable {
       fontSize:
           (fontSize ?? this.fontSize ?? _kDefaultFontSize) * textScaleFactor,
       height: height ?? this.height,
+<<<<<<< HEAD
       textHeightBehavior: textHeightBehavior,
       strutStyle: strutStyle == null
           ? null
@@ -1156,6 +1320,19 @@ class TextStyle with Diagnosticable {
               fontStyle: strutStyle.fontStyle,
               forceStrutHeight: strutStyle.forceStrutHeight,
             ),
+=======
+      textHeightBehavior: effectiveTextHeightBehavior,
+      strutStyle: strutStyle == null ? null : ui.StrutStyle(
+        fontFamily: strutStyle.fontFamily,
+        fontFamilyFallback: strutStyle.fontFamilyFallback,
+        fontSize: strutStyle.fontSize == null ? null : strutStyle.fontSize! * textScaleFactor,
+        height: strutStyle.height,
+        leading: strutStyle.leading,
+        fontWeight: strutStyle.fontWeight,
+        fontStyle: strutStyle.fontStyle,
+        forceStrutHeight: strutStyle.forceStrutHeight,
+      ),
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
       maxLines: maxLines,
       ellipsis: ellipsis,
       locale: locale,
@@ -1179,12 +1356,14 @@ class TextStyle with Diagnosticable {
         wordSpacing != other.wordSpacing ||
         textBaseline != other.textBaseline ||
         height != other.height ||
+        leadingDistribution != other.leadingDistribution ||
         locale != other.locale ||
         foreground != other.foreground ||
         background != other.background ||
         !listEquals(shadows, other.shadows) ||
         !listEquals(fontFeatures, other.fontFeatures) ||
-        !listEquals(fontFamilyFallback, other.fontFamilyFallback))
+        !listEquals(fontFamilyFallback, other.fontFamilyFallback) ||
+        overflow != other.overflow)
       return RenderComparison.layout;
     if (color != other.color ||
         backgroundColor != other.backgroundColor ||
@@ -1198,6 +1377,7 @@ class TextStyle with Diagnosticable {
 
   @override
   bool operator ==(Object other) {
+<<<<<<< HEAD
     if (identical(this, other)) return true;
     if (other.runtimeType != runtimeType) return false;
     return other is TextStyle &&
@@ -1222,15 +1402,45 @@ class TextStyle with Diagnosticable {
         listEquals(other.shadows, shadows) &&
         listEquals(other.fontFeatures, fontFeatures) &&
         listEquals(other.fontFamilyFallback, fontFamilyFallback);
+=======
+    if (identical(this, other))
+      return true;
+    if (other.runtimeType != runtimeType)
+      return false;
+    return other is TextStyle
+        && other.inherit == inherit
+        && other.color == color
+        && other.backgroundColor == backgroundColor
+        && other.fontSize == fontSize
+        && other.fontWeight == fontWeight
+        && other.fontStyle == fontStyle
+        && other.letterSpacing == letterSpacing
+        && other.wordSpacing == wordSpacing
+        && other.textBaseline == textBaseline
+        && other.height == height
+        && other.leadingDistribution == leadingDistribution
+        && other.locale == locale
+        && other.foreground == foreground
+        && other.background == background
+        && listEquals(other.shadows, shadows)
+        && listEquals(other.fontFeatures, fontFeatures)
+        && other.decoration == decoration
+        && other.decorationColor == decorationColor
+        && other.decorationStyle == decorationStyle
+        && other.decorationThickness == decorationThickness
+        && other.fontFamily == fontFamily
+        && listEquals(other.fontFamilyFallback, fontFamilyFallback)
+        && other._package == _package
+        && other.overflow == overflow;
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
   }
 
   @override
   int get hashCode {
-    return hashValues(
+    return hashList(<Object?>[
       inherit,
       color,
       backgroundColor,
-      fontFamily,
       fontSize,
       fontWeight,
       fontStyle,
@@ -1238,16 +1448,21 @@ class TextStyle with Diagnosticable {
       wordSpacing,
       textBaseline,
       height,
+      leadingDistribution,
       locale,
       foreground,
       background,
+      hashList(shadows),
+      hashList(fontFeatures),
       decoration,
       decorationColor,
       decorationStyle,
-      hashList(shadows),
-      hashList(fontFeatures),
+      decorationThickness,
+      fontFamily,
       hashList(fontFamilyFallback),
-    );
+      _package,
+      overflow,
+    ]);
   }
 
   @override
@@ -1283,6 +1498,7 @@ class TextStyle with Diagnosticable {
       description: weightDescription,
       defaultValue: null,
     ));
+<<<<<<< HEAD
     styles.add(EnumProperty<FontStyle>('${prefix}style', fontStyle,
         defaultValue: null));
     styles.add(DoubleProperty('${prefix}letterSpacing', letterSpacing,
@@ -1303,9 +1519,21 @@ class TextStyle with Diagnosticable {
         decorationColor != null ||
         decorationStyle != null ||
         decorationThickness != null) {
+=======
+    styles.add(EnumProperty<FontStyle>('${prefix}style', fontStyle, defaultValue: null));
+    styles.add(DoubleProperty('${prefix}letterSpacing', letterSpacing, defaultValue: null));
+    styles.add(DoubleProperty('${prefix}wordSpacing', wordSpacing, defaultValue: null));
+    styles.add(EnumProperty<TextBaseline>('${prefix}baseline', textBaseline, defaultValue: null));
+    styles.add(DoubleProperty('${prefix}height', height, unit: 'x', defaultValue: null));
+    styles.add(EnumProperty<ui.TextLeadingDistribution>('${prefix}leadingDistribution', leadingDistribution, defaultValue: null));
+    styles.add(DiagnosticsProperty<Locale>('${prefix}locale', locale, defaultValue: null));
+    styles.add(DiagnosticsProperty<Paint>('${prefix}foreground', foreground, defaultValue: null));
+    styles.add(DiagnosticsProperty<Paint>('${prefix}background', background, defaultValue: null));
+    if (decoration != null || decorationColor != null || decorationStyle != null || decorationThickness != null) {
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
       final List<String> decorationDescription = <String>[];
       if (decorationStyle != null)
-        decorationDescription.add(describeEnum(decorationStyle!));
+        decorationDescription.add(decorationStyle!.name);
 
       // Hide decorationColor from the default text view as it is shown in the
       // terse decoration summary as well.
@@ -1339,9 +1567,15 @@ class TextStyle with Diagnosticable {
     styles.forEach(properties.add);
 
     if (!styleSpecified)
+<<<<<<< HEAD
       properties.add(FlagProperty('inherit',
           value: inherit,
           ifTrue: '$prefix<all styles inherited>',
           ifFalse: '$prefix<no style specified>'));
+=======
+      properties.add(FlagProperty('inherit', value: inherit, ifTrue: '$prefix<all styles inherited>', ifFalse: '$prefix<no style specified>'));
+
+    styles.add(EnumProperty<TextOverflow>('${prefix}overflow', overflow, defaultValue: null));
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
   }
 }

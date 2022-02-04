@@ -5,7 +5,6 @@
 import 'dart:async';
 
 import 'package:args/args.dart';
-import 'package:meta/meta.dart';
 import 'package:process/process.dart';
 
 import '../artifacts.dart';
@@ -22,12 +21,12 @@ class AnalyzeOnce extends AnalyzeBase {
     ArgResults argResults,
     List<String> repoRoots,
     List<Directory> repoPackages, {
-    @required FileSystem fileSystem,
-    @required Logger logger,
-    @required Platform platform,
-    @required ProcessManager processManager,
-    @required Terminal terminal,
-    @required Artifacts artifacts,
+    required FileSystem fileSystem,
+    required Logger logger,
+    required Platform platform,
+    required ProcessManager processManager,
+    required Terminal terminal,
+    required Artifacts artifacts,
     this.workingDirectory,
   }) : super(
         argResults,
@@ -42,7 +41,7 @@ class AnalyzeOnce extends AnalyzeBase {
       );
 
   /// The working directory for testing analysis using dartanalyzer.
-  final Directory workingDirectory;
+  final Directory? workingDirectory;
 
   @override
   Future<void> analyze() async {
@@ -93,12 +92,13 @@ class AnalyzeOnce extends AnalyzeBase {
       logger: logger,
       processManager: processManager,
       terminal: terminal,
+      protocolTrafficLog: protocolTrafficLog,
     );
 
-    Stopwatch timer;
-    Status progress;
+    Stopwatch? timer;
+    Status? progress;
     try {
-      StreamSubscription<bool> subscription;
+      StreamSubscription<bool>? subscription;
 
       void handleAnalysisStatus(bool isAnalyzing) {
         if (!isAnalyzing) {
@@ -120,9 +120,14 @@ class AnalyzeOnce extends AnalyzeBase {
 
       await server.start();
       // Completing the future in the callback can't fail.
-      unawaited(server.onExit.then<void>((int exitCode) {
+      unawaited(server.onExit.then<void>((int? exitCode) {
         if (!analysisCompleter.isCompleted) {
-          analysisCompleter.completeError('analysis server exited: $exitCode');
+          analysisCompleter.completeError(
+            // Include the last 20 lines of server output in exception message
+            Exception(
+              'analysis server exited with code $exitCode and output:\n${server.getLogs(20)}',
+            ),
+          );
         }
       }));
 
@@ -131,7 +136,7 @@ class AnalyzeOnce extends AnalyzeBase {
       final String message = directories.length > 1
           ? '${directories.length} ${directories.length == 1 ? 'directory' : 'directories'}'
           : fileSystem.path.basename(directories.first);
-      progress = argResults['preamble'] as bool
+      progress = argResults['preamble'] == true
           ? logger.startProgress(
             'Analyzing $message...',
           )
@@ -144,14 +149,9 @@ class AnalyzeOnce extends AnalyzeBase {
       timer?.stop();
     }
 
-    final int undocumentedMembers = AnalyzeBase.countMissingDartDocs(errors);
-    if (!isDartDocs) {
-      errors.removeWhere((AnalysisError error) => error.code == 'public_member_api_docs');
-    }
-
     // emit benchmarks
     if (isBenchmarking) {
-      writeBenchmark(timer, errors.length, undocumentedMembers);
+      writeBenchmark(timer, errors.length);
     }
 
     // --write
@@ -168,12 +168,9 @@ class AnalyzeOnce extends AnalyzeBase {
 
     final int errorCount = errors.length;
     final String seconds = (timer.elapsedMilliseconds / 1000.0).toStringAsFixed(1);
-    final String dartDocMessage = AnalyzeBase.generateDartDocMessage(undocumentedMembers);
     final String errorsMessage = AnalyzeBase.generateErrorsMessage(
       issueCount: errorCount,
       seconds: seconds,
-      undocumentedMembers: undocumentedMembers,
-      dartDocMessage: dartDocMessage,
     );
 
     if (errorCount > 0) {

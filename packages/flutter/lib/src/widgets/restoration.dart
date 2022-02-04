@@ -522,7 +522,7 @@ abstract class RestorableProperty<T> extends ChangeNotifier {
       if (_disposed) {
         throw FlutterError(
           'A $runtimeType was used after being disposed.\n'
-          'Once you have called dispose() on a $runtimeType, it can no longer be used.'
+          'Once you have called dispose() on a $runtimeType, it can no longer be used.',
         );
       }
       return true;
@@ -598,106 +598,11 @@ abstract class RestorableProperty<T> extends ChangeNotifier {
 /// [didUpdateRestorationId] must be called (unless the change already triggers
 /// a call to [didUpdateWidget]).
 ///
-/// {@tool dartpad --template=freeform}
+/// {@tool dartpad}
 /// This example demonstrates how to make a simple counter app restorable by
 /// using the [RestorationMixin] and a [RestorableInt].
 ///
-/// ```dart imports
-/// import 'package:flutter/material.dart';
-/// ```
-///
-/// ```dart main
-/// void main() => runApp(RestorationExampleApp());
-/// ```
-///
-/// ```dart preamble
-/// class RestorationExampleApp extends StatelessWidget {
-///   @override
-///   Widget build(BuildContext context) {
-///     return MaterialApp(
-///       restorationScopeId: 'app',
-///       title: 'Restorable Counter',
-///       home: RestorableCounter(restorationId: 'counter'),
-///     );
-///   }
-/// }
-/// ```
-///
-/// ```dart
-/// class RestorableCounter extends StatefulWidget {
-///   RestorableCounter({Key? key, this.restorationId}) : super(key: key);
-///
-///   final String? restorationId;
-///
-///   @override
-///   _RestorableCounterState createState() => _RestorableCounterState();
-/// }
-///
-/// // The [State] object uses the [RestorationMixin] to make the current value
-/// // of the counter restorable.
-/// class _RestorableCounterState extends State<RestorableCounter> with RestorationMixin {
-///   // The current value of the counter is stored in a [RestorableProperty].
-///   // During state restoration it is automatically restored to its old value.
-///   // If no restoration data is available to restore the counter from, it is
-///   // initialized to the specified default value of zero.
-///   RestorableInt _counter = RestorableInt(0);
-///
-///   // In this example, the restoration ID for the mixin is passed in through
-///   // the [StatefulWidget]'s constructor.
-///   @override
-///   String? get restorationId => widget.restorationId;
-///
-///   @override
-///   void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
-///     // All restorable properties must be registered with the mixin. After
-///     // registration, the counter either has its old value restored or is
-///     // initialized to its default value.
-///     registerForRestoration(_counter, 'count');
-///   }
-///
-///   void _incrementCounter() {
-///     setState(() {
-///       // The current value of the property can be accessed and modified via
-///       // the value getter and setter.
-///       _counter.value++;
-///     });
-///   }
-///
-///   @override
-///   void dispose() {
-///     _counter.dispose();
-///     super.dispose();
-///   }
-///
-///   @override
-///   Widget build(BuildContext context) {
-///     return Scaffold(
-///       appBar: AppBar(
-///         title: Text('Restorable Counter'),
-///       ),
-///       body: Center(
-///         child: Column(
-///           mainAxisAlignment: MainAxisAlignment.center,
-///           children: <Widget>[
-///             Text(
-///               'You have pushed the button this many times:',
-///             ),
-///             Text(
-///               '${_counter.value}',
-///               style: Theme.of(context).textTheme.headline4,
-///             ),
-///           ],
-///         ),
-///       ),
-///       floatingActionButton: FloatingActionButton(
-///         onPressed: _incrementCounter,
-///         tooltip: 'Increment',
-///         child: Icon(Icons.add),
-///       ),
-///     );
-///   }
-/// }
-/// ```
+/// ** See code in examples/api/lib/widgets/restoration/restoration_mixin.0.dart **
 /// {@end-tool}
 ///
 /// See also:
@@ -716,7 +621,7 @@ mixin RestorationMixin<S extends StatefulWidget> on State<S> {
   /// The restoration ID is used to claim a child [RestorationScope] from the
   /// surrounding [RestorationScope] (accessed via [RestorationScope.of]) and
   /// the ID must be unique in that scope (otherwise an exception is triggered
-  /// in debug move).
+  /// in debug mode).
   ///
   /// State restoration for this mixin is turned off when this getter returns
   /// null or when there is no surrounding [RestorationScope] available. When
@@ -840,7 +745,7 @@ mixin RestorationMixin<S extends StatefulWidget> on State<S> {
            'Property is already registered under ${property._restorationId}.',
     );
     assert(_debugDoingRestore || !_properties.keys.map((RestorableProperty<Object?> r) => r._restorationId).contains(restorationId),
-           '"$restorationId" is already registered to another property.'
+           '"$restorationId" is already registered to another property.',
     );
     final bool hasSerializedValue = bucket?.contains(restorationId) == true;
     final Object? initialValue = hasSerializedValue
@@ -849,11 +754,11 @@ mixin RestorationMixin<S extends StatefulWidget> on State<S> {
 
     if (!property.isRegistered) {
       property._register(restorationId, this);
-      final VoidCallback listener = () {
+      void listener() {
         if (bucket == null)
           return;
         _updateProperty(property);
-      };
+      }
       property.addListener(listener);
       _properties[property] = listener;
     }
@@ -861,7 +766,7 @@ mixin RestorationMixin<S extends StatefulWidget> on State<S> {
     assert(
       property._restorationId == restorationId &&
       property._owner == this &&
-      _properties.containsKey(property)
+      _properties.containsKey(property),
     );
 
     property.initWithValue(initialValue);

@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
-import 'binary_messenger.dart';
+import 'binding.dart';
 
 /// A collection of resources used by the application.
 ///
@@ -61,15 +61,22 @@ abstract class AssetBundle {
   /// If the `cache` argument is set to false, then the data will not be
   /// cached, and reading the data may bypass the cache. This is useful if the
   /// caller is going to be doing its own caching. (It might not be cached if
+<<<<<<< HEAD
   /// it's set to true either, that depends on the asset bundle
   /// implementation.)
   Future<String> loadString(String key, {bool cache = true}) async {
+=======
+  /// it's set to true either, depending on the asset bundle implementation.)
+  ///
+  /// The function expects the stored string to be UTF-8-encoded as
+  /// [Utf8Codec] will be used for decoding the string. If the string is
+  /// larger than 50 KB, the decoding process is delegated to an
+  /// isolate to avoid jank on the main thread.
+  Future<String> loadString(String key, { bool cache = true }) async {
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
     final ByteData data = await load(key);
-    // Note: data has a non-nullable type, but might be null when running with
-    // weak checking, so we need to null check it anyway (and ignore the warning
-    // that the null-handling logic is dead code).
     if (data == null)
-      throw FlutterError('Unable to load asset: $key'); // ignore: dead_code
+      throw FlutterError('Unable to load asset: $key');
     // 50 KB of data should take 2-3 ms to parse on a Moto G4, and about 400 μs
     // on a Pixel 4.
     if (data.lengthInBytes < 50 * 1024) {
@@ -89,12 +96,15 @@ abstract class AssetBundle {
   ///
   /// Implementations may cache the result, so a particular key should only be
   /// used with one parser for the lifetime of the asset bundle.
-  Future<T> loadStructuredData<T>(String key, Future<T> parser(String value));
+  Future<T> loadStructuredData<T>(String key, Future<T> Function(String value) parser);
 
   /// If this is a caching asset bundle, and the given key describes a cached
   /// asset, then evict the asset from the cache so that the next time it is
   /// loaded, the cache will be reread from the asset bundle.
   void evict(String key) {}
+
+  /// If this is a caching asset bundle, clear all cached data.
+  void clear() { }
 
   @override
   String toString() => '${describeIdentity(this)}()';
@@ -105,7 +115,7 @@ abstract class AssetBundle {
 /// This asset bundle does not cache any resources, though the underlying
 /// network stack may implement some level of caching itself.
 class NetworkAssetBundle extends AssetBundle {
-  /// Creates an network asset bundle that resolves asset keys as URLs relative
+  /// Creates a network asset bundle that resolves asset keys as URLs relative
   /// to the given base URL.
   NetworkAssetBundle(Uri baseUrl)
       : _baseUrl = baseUrl,
@@ -136,8 +146,12 @@ class NetworkAssetBundle extends AssetBundle {
   /// The result is not cached. The parser is run each time the resource is
   /// fetched.
   @override
+<<<<<<< HEAD
   Future<T> loadStructuredData<T>(
       String key, Future<T> parser(String value)) async {
+=======
+  Future<T> loadStructuredData<T>(String key, Future<T> Function(String value) parser) async {
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
     assert(key != null);
     assert(parser != null);
     return parser(await loadString(key));
@@ -182,7 +196,7 @@ abstract class CachingAssetBundle extends AssetBundle {
   /// subsequent calls will be a [SynchronousFuture], which resolves its
   /// callback synchronously.
   @override
-  Future<T> loadStructuredData<T>(String key, Future<T> parser(String value)) {
+  Future<T> loadStructuredData<T>(String key, Future<T> Function(String value) parser) {
     assert(key != null);
     assert(parser != null);
     if (_structuredDataCache.containsKey(key))
@@ -216,17 +230,31 @@ abstract class CachingAssetBundle extends AssetBundle {
     _stringCache.remove(key);
     _structuredDataCache.remove(key);
   }
+
+  @override
+  void clear() {
+    _stringCache.clear();
+    _structuredDataCache.clear();
+  }
 }
 
 /// An [AssetBundle] that loads resources using platform messages.
 class PlatformAssetBundle extends CachingAssetBundle {
   @override
   Future<ByteData> load(String key) async {
+<<<<<<< HEAD
     final Uint8List encoded =
         utf8.encoder.convert(Uri(path: Uri.encodeFull(key)).path);
     final ByteData? asset = await defaultBinaryMessenger.send(
         'flutter/assets', encoded.buffer.asByteData());
     if (asset == null) throw FlutterError('Unable to load asset: $key');
+=======
+    final Uint8List encoded = utf8.encoder.convert(Uri(path: Uri.encodeFull(key)).path);
+    final ByteData? asset =
+        await ServicesBinding.instance!.defaultBinaryMessenger.send('flutter/assets', encoded.buffer.asByteData());
+    if (asset == null)
+      throw FlutterError('Unable to load asset: $key');
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
     return asset;
   }
 }

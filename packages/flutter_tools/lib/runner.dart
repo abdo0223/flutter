@@ -2,10 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// @dart = 2.8
+
 import 'dart:async';
 
 import 'package:args/command_runner.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart' as intl;
 import 'package:intl/intl_standalone.dart' as intl_standalone;
 
@@ -19,14 +20,11 @@ import 'src/base/process.dart';
 import 'src/context_runner.dart';
 import 'src/doctor.dart';
 import 'src/globals.dart' as globals;
-import 'src/reporting/reporting.dart';
+import 'src/reporting/crash_reporting.dart';
 import 'src/runner/flutter_command.dart';
 import 'src/runner/flutter_command_runner.dart';
 
 /// Runs the Flutter tool with support for the specified list of [commands].
-///
-/// [commands] must be either `List<FlutterCommand>` or `List<FlutterCommand> Function()`.
-// TODO(jonahwilliams): update command type once g3 has rolled.
 Future<int> run(
   List<String> args,
   List<FlutterCommand> Function() commands, {
@@ -41,7 +39,7 @@ Future<int> run(
     // Remove the verbose option; for help and doctor, users don't need to see
     // verbose logs.
     args = List<String>.of(args);
-    args.removeWhere((String option) => option == '-v' || option == '--verbose');
+    args.removeWhere((String option) => option == '-vv' || option == '-v' || option == '--verbose');
   }
 
   return runInContext<int>(() async {
@@ -59,7 +57,7 @@ Future<int> run(
     String getVersion() => flutterVersion ?? globals.flutterVersion.getVersionString(redactUnknownBranches: true);
     Object firstError;
     StackTrace firstStackTrace;
-    return await runZoned<Future<int>>(() async {
+    return runZoned<Future<int>>(() async {
       try {
         await runner.run(args);
 
@@ -72,12 +70,11 @@ Future<int> run(
         // We already hit some error, so don't return success.  The error path
         // (which should be in progress) is responsible for calling _exit().
         return 1;
-      // This catches all exceptions to send to crash logging, etc.
-      } catch (error, stackTrace) {  // ignore: avoid_catches_without_on_clauses
+      } catch (error, stackTrace) { // ignore: avoid_catches_without_on_clauses
+        // This catches all exceptions to send to crash logging, etc.
         firstError = error;
         firstStackTrace = stackTrace;
-        return await _handleToolError(
-            error, stackTrace, verbose, args, reportCrashes, getVersion);
+        return _handleToolError(error, stackTrace, verbose, args, reportCrashes, getVersion);
       }
     }, onError: (Object error, StackTrace stackTrace) async { // ignore: deprecated_member_use
       // If sending a crash report throws an error into the zone, we don't want
@@ -96,7 +93,7 @@ Future<int> _handleToolError(
   bool verbose,
   List<String> args,
   bool reportCrashes,
-  String getFlutterVersion(),
+  String Function() getFlutterVersion,
 ) async {
   if (error is UsageException) {
     globals.printError('${error.message}\n');
@@ -134,7 +131,6 @@ Future<int> _handleToolError(
     globals.flutterUsage.sendException(error);
     await asyncGuard(() async {
       final CrashReportSender crashReportSender = CrashReportSender(
-        client: http.Client(),
         usage: globals.flutterUsage,
         platform: globals.platform,
         logger: globals.logger,
@@ -167,7 +163,8 @@ Future<int> _handleToolError(
     } catch (error) { // ignore: avoid_catches_without_on_clauses
       globals.stdio.stderrWrite(
         'Unable to generate crash report due to secondary error: $error\n'
-        '${globals.userMessages.flutterToolBugInstructions}\n');
+        '${globals.userMessages.flutterToolBugInstructions}\n',
+      );
       // Any exception thrown here (including one thrown by `_exit()`) will
       // get caught by our zone's `onError` handler. In order to avoid an
       // infinite error loop, we throw an error that is recognized above
@@ -232,7 +229,7 @@ Future<String> _doctorText() async {
     );
 
     final Doctor doctor = Doctor(logger: logger);
-    await doctor.diagnose(verbose: true, showColor: false);
+    await doctor.diagnose(showColor: false);
 
     return logger.statusText;
   } on Exception catch (error, trace) {
@@ -253,7 +250,7 @@ Future<int> _exit(int code) async {
   }
 
   // Run shutdown hooks before flushing logs
-  await shutdownHooks.runShutdownHooks();
+  await globals.shutdownHooks.runShutdownHooks();
 
   final Completer<void> completer = Completer<void>();
 

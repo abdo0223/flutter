@@ -55,6 +55,7 @@ class NetworkImage
       chunkEvents: chunkEvents.stream,
       scale: key.scale,
       debugLabel: key.url,
+<<<<<<< HEAD
       informationCollector: () {
         return <DiagnosticsNode>[
           DiagnosticsProperty<image_provider.ImageProvider>(
@@ -62,6 +63,12 @@ class NetworkImage
           DiagnosticsProperty<image_provider.NetworkImage>('Image key', key),
         ];
       },
+=======
+      informationCollector: () => <DiagnosticsNode>[
+        DiagnosticsProperty<image_provider.ImageProvider>('Image provider', this),
+        DiagnosticsProperty<image_provider.NetworkImage>('Image key', key),
+      ],
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
     );
   }
 
@@ -102,8 +109,13 @@ class NetworkImage
         // The network may be only temporarily unavailable, or the file will be
         // added on the server later. Avoid having future calls to resolve
         // fail to check the network again.
+<<<<<<< HEAD
         throw image_provider.NetworkImageLoadException(
             statusCode: response.statusCode, uri: resolved);
+=======
+        await response.drain<List<int>>(<int>[]);
+        throw image_provider.NetworkImageLoadException(statusCode: response.statusCode, uri: resolved);
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
       }
 
       final Uint8List bytes = await consolidateHttpClientResponseBytes(

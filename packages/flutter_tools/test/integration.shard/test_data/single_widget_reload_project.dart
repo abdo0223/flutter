@@ -73,7 +73,11 @@ class SingleWidgetReloadProject extends Project {
       '// printHotReloadWorked();',
       'printHotReloadWorked();',
     );
-    writeFile(fileSystem.path.join(dir.path, 'lib', 'main.dart'), newMainContents);
+    writeFile(
+      fileSystem.path.join(dir.path, 'lib', 'main.dart'),
+      newMainContents,
+      writeFutureModifiedDate: true,
+    );
   }
 
   void modifyFunction() {
@@ -81,6 +85,10 @@ class SingleWidgetReloadProject extends Project {
       '(((((RELOAD WORKED)))))',
       '(((((RELOAD WORKED 2)))))',
     );
-    writeFile(fileSystem.path.join(dir.path, 'lib', 'main.dart'), newMainContents);
+    writeFile(
+      fileSystem.path.join(dir.path, 'lib', 'main.dart'),
+      newMainContents,
+      writeFutureModifiedDate: true,
+    );
   }
 }

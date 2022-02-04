@@ -4,12 +4,10 @@
 
 import 'dart:async';
 
-import 'package:meta/meta.dart';
-
 import 'base/io.dart';
 import 'base/logger.dart';
 import 'device.dart';
-import 'globals.dart' as globals;
+import 'device_port_forwarder.dart';
 
 /// Discovers a specific service protocol on a device, and forwards the service
 /// protocol device port to the host.
@@ -18,28 +16,27 @@ class ProtocolDiscovery {
     this.logReader,
     this.serviceName, {
     this.portForwarder,
-    this.throttleDuration,
+    required this.throttleDuration,
     this.hostPort,
     this.devicePort,
-    this.ipv6,
-    Logger logger,
+    required this.ipv6,
+    required Logger logger,
   }) : _logger = logger,
        assert(logReader != null) {
     _deviceLogSubscription = logReader.logLines.listen(
       _handleLine,
       onDone: _stopScrapingLogs,
     );
-    _uriStreamController = _BufferedStreamController<Uri>();
   }
 
   factory ProtocolDiscovery.observatory(
     DeviceLogReader logReader, {
-    DevicePortForwarder portForwarder,
-    Duration throttleDuration,
-    @required int hostPort,
-    @required int devicePort,
-    @required bool ipv6,
-    Logger logger, // TODO(jonahwilliams): make required.
+    DevicePortForwarder? portForwarder,
+    Duration? throttleDuration,
+    int? hostPort,
+    int? devicePort,
+    required bool ipv6,
+    required Logger logger,
   }) {
     const String kObservatoryService = 'Observatory';
     return ProtocolDiscovery._(
@@ -50,23 +47,23 @@ class ProtocolDiscovery {
       hostPort: hostPort,
       devicePort: devicePort,
       ipv6: ipv6,
-      logger: logger ?? globals.logger,
+      logger: logger,
     );
   }
 
   final DeviceLogReader logReader;
   final String serviceName;
-  final DevicePortForwarder portForwarder;
-  final int hostPort;
-  final int devicePort;
+  final DevicePortForwarder? portForwarder;
+  final int? hostPort;
+  final int? devicePort;
   final bool ipv6;
   final Logger _logger;
 
   /// The time to wait before forwarding a new observatory URIs from [logReader].
   final Duration throttleDuration;
 
-  StreamSubscription<String> _deviceLogSubscription;
-  _BufferedStreamController<Uri> _uriStreamController;
+  StreamSubscription<String>? _deviceLogSubscription;
+  final _BufferedStreamController<Uri> _uriStreamController = _BufferedStreamController<Uri>();
 
   /// The discovered service URL.
   ///
@@ -74,7 +71,7 @@ class ProtocolDiscovery {
   ///
   /// Use [uris] instead.
   // TODO(egarciad): replace `uri` for `uris`.
-  Future<Uri> get uri async {
+  Future<Uri?> get uri async {
     try {
       return await uris.first;
     } on StateError {
@@ -101,32 +98,32 @@ class ProtocolDiscovery {
   Future<void> cancel() => _stopScrapingLogs();
 
   Future<void> _stopScrapingLogs() async {
-    await _uriStreamController?.close();
+    await _uriStreamController.close();
     await _deviceLogSubscription?.cancel();
     _deviceLogSubscription = null;
   }
 
-  Match _getPatternMatch(String line) {
+  Match? _getPatternMatch(String line) {
     final RegExp r = RegExp(RegExp.escape(serviceName) + r' listening on ((http|//)[a-zA-Z0-9:/=_\-\.\[\]]+)');
     return r.firstMatch(line);
   }
 
-  Uri _getObservatoryUri(String line) {
-    final Match match = _getPatternMatch(line);
+  Uri? _getObservatoryUri(String line) {
+    final Match? match = _getPatternMatch(line);
     if (match != null) {
-      return Uri.parse(match[1]);
+      return Uri.parse(match[1]!);
     }
     return null;
   }
 
   void _handleLine(String line) {
-    Uri uri;
+    Uri? uri;
     try {
       uri = _getObservatoryUri(line);
     } on FormatException catch (error, stackTrace) {
       _uriStreamController.addError(error, stackTrace);
     }
-    if (uri == null) {
+    if (uri == null || uri.host.isEmpty) {
       return;
     }
     if (devicePort != null && uri.port != devicePort) {
@@ -140,15 +137,15 @@ class ProtocolDiscovery {
     _logger.printTrace('$serviceName URL on device: $deviceUri');
     Uri hostUri = deviceUri;
 
-    if (portForwarder != null) {
+    final DevicePortForwarder? forwarder = portForwarder;
+    if (forwarder != null) {
       final int actualDevicePort = deviceUri.port;
-      final int actualHostPort = await portForwarder.forward(actualDevicePort, hostPort: hostPort);
+      final int actualHostPort = await forwarder.forward(actualDevicePort, hostPort: hostPort);
       _logger.printTrace('Forwarded host port $actualHostPort to device port $actualDevicePort for $serviceName');
       hostUri = deviceUri.replace(port: actualHostPort);
     }
 
-    assert(InternetAddress(hostUri.host).isLoopback);
-    if (ipv6) {
+    if (InternetAddress(hostUri.host).isLoopback && ipv6) {
       hostUri = hostUri.replace(host: InternetAddress.loopbackIPv6.host);
     }
     return hostUri;
@@ -166,25 +163,24 @@ class _BufferedStreamController<T> {
     return _streamController.stream;
   }
 
-  StreamController<T> _streamControllerInstance;
-
-  StreamController<T> get _streamController {
-    _streamControllerInstance ??= StreamController<T>.broadcast(onListen: () {
+  late final StreamController<T> _streamController = () {
+    final StreamController<T> streamControllerInstance = StreamController<T>.broadcast();
+      streamControllerInstance.onListen = () {
       for (final dynamic event in _events) {
         assert(T is! List);
         if (event is T) {
-          _streamControllerInstance.add(event);
+          streamControllerInstance.add(event);
         } else {
-          _streamControllerInstance.addError(
-            event.first as Object,
+          streamControllerInstance.addError(
+            (event as Iterable<dynamic>).first as Object,
             event.last as StackTrace,
           );
         }
       }
       _events.clear();
-    });
-    return _streamControllerInstance;
-  }
+    };
+    return streamControllerInstance;
+  }();
 
   final List<dynamic> _events;
 
@@ -199,7 +195,7 @@ class _BufferedStreamController<T> {
   }
 
   /// Sends or enqueues an error event.
-  void addError(Object error, [StackTrace stackTrace]) {
+  void addError(Object error, [StackTrace? stackTrace]) {
     if (_streamController.hasListener) {
       _streamController.addError(error, stackTrace);
     } else {
@@ -219,13 +215,13 @@ class _BufferedStreamController<T> {
 /// and arrival times: `a (0ms), b (5ms), c (11ms), d (21ms)`.
 /// The events `a`, `c`, and `d` will be produced as a result.
 StreamTransformer<S, S> _throttle<S>({
-  @required Duration waitDuration,
+  required Duration waitDuration,
 }) {
   assert(waitDuration != null);
 
   S latestLine;
-  int lastExecution;
-  Future<void> throttleFuture;
+  int? lastExecution;
+  Future<void>? throttleFuture;
   bool done = false;
 
   return StreamTransformer<S, S>
@@ -236,7 +232,7 @@ StreamTransformer<S, S> _throttle<S>({
         final bool isFirstMessage = lastExecution == null;
         final int currentTime = DateTime.now().millisecondsSinceEpoch;
         lastExecution ??= currentTime;
-        final int remainingTime = currentTime - lastExecution;
+        final int remainingTime = currentTime - lastExecution!;
 
         // Always send the first event immediately.
         final int nextExecutionTime = isFirstMessage || remainingTime > waitDuration.inMilliseconds

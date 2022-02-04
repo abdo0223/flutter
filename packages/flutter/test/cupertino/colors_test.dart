@@ -5,7 +5,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/rendering.dart';
 
 import '../rendering/mock_canvas.dart';
 
@@ -203,13 +202,15 @@ void main() {
     );
   });
 
-  testWidgets('Dynamic colors that are not actually dynamic should not claim dependencies',
+  testWidgets(
+    'Dynamic colors that are not actually dynamic should not claim dependencies',
     (WidgetTester tester) async {
       await tester.pumpWidget(const DependentWidget(color: notSoDynamicColor1));
 
       expect(tester.takeException(), null);
       expect(find.byType(DependentWidget), paints..rect(color: color0));
-  });
+    },
+  );
 
   testWidgets(
     'Dynamic colors that are only dependent on vibrancy should not claim unnecessary dependencies, '
@@ -217,7 +218,7 @@ void main() {
     (WidgetTester tester) async {
       await tester.pumpWidget(
         const MediaQuery(
-          data: MediaQueryData(platformBrightness: Brightness.light),
+          data: MediaQueryData(),
           child: DependentWidget(color: vibrancyDependentColor1),
         ),
       );
@@ -252,7 +253,8 @@ void main() {
       expect(tester.takeException(), null);
       expect(find.byType(DependentWidget), paints..rect(color: color1));
       expect(find.byType(DependentWidget), isNot(paints..rect(color: color0)));
-  });
+    },
+  );
 
   testWidgets(
     'Dynamic colors that are only dependent on accessibility contrast should not claim unnecessary dependencies, '
@@ -260,7 +262,7 @@ void main() {
     (WidgetTester tester) async {
       await tester.pumpWidget(
         const MediaQuery(
-          data: MediaQueryData(highContrast: false),
+          data: MediaQueryData(),
           child: DependentWidget(color: contrastDependentColor1),
         ),
       );
@@ -280,7 +282,8 @@ void main() {
       expect(tester.takeException(), null);
       expect(find.byType(DependentWidget), paints..rect(color: color0));
       expect(find.byType(DependentWidget), isNot(paints..rect(color: color1)));
-  });
+    },
+  );
 
   testWidgets(
     'Dynamic colors that are only dependent on elevation level should not claim unnecessary dependencies, '
@@ -308,7 +311,8 @@ void main() {
       expect(tester.takeException(), null);
       expect(find.byType(DependentWidget), paints..rect(color: color0));
       expect(find.byType(DependentWidget), isNot(paints..rect(color: color1)));
-  });
+    },
+  );
 
   testWidgets('Dynamic color with all 3 dependencies works', (WidgetTester tester) async {
     const Color dynamicRainbowColor1 = CupertinoDynamicColor(
@@ -324,7 +328,7 @@ void main() {
 
     await tester.pumpWidget(
       const MediaQuery(
-        data: MediaQueryData(platformBrightness: Brightness.light, highContrast: false),
+        data: MediaQueryData(),
         child: CupertinoUserInterfaceLevel(
           data: CupertinoUserInterfaceLevelData.base,
           child: DependentWidget(color: dynamicRainbowColor1),
@@ -335,7 +339,7 @@ void main() {
 
     await tester.pumpWidget(
       const MediaQuery(
-        data: MediaQueryData(platformBrightness: Brightness.dark, highContrast: false),
+        data: MediaQueryData(platformBrightness: Brightness.dark),
         child: CupertinoUserInterfaceLevel(
           data: CupertinoUserInterfaceLevelData.base,
           child: DependentWidget(color: dynamicRainbowColor1),
@@ -346,7 +350,7 @@ void main() {
 
     await tester.pumpWidget(
       const MediaQuery(
-        data: MediaQueryData(platformBrightness: Brightness.light, highContrast: true),
+        data: MediaQueryData(highContrast: true),
         child: CupertinoUserInterfaceLevel(
           data: CupertinoUserInterfaceLevelData.base,
           child: DependentWidget(color: dynamicRainbowColor1),
@@ -368,7 +372,7 @@ void main() {
 
     await tester.pumpWidget(
       const MediaQuery(
-        data: MediaQueryData(platformBrightness: Brightness.dark, highContrast: false),
+        data: MediaQueryData(platformBrightness: Brightness.dark),
         child: CupertinoUserInterfaceLevel(
           data: CupertinoUserInterfaceLevelData.elevated,
           child: DependentWidget(color: dynamicRainbowColor1),
@@ -379,7 +383,7 @@ void main() {
 
     await tester.pumpWidget(
       const MediaQuery(
-        data: MediaQueryData(platformBrightness: Brightness.light, highContrast: true),
+        data: MediaQueryData(highContrast: true),
         child: CupertinoUserInterfaceLevel(
           data: CupertinoUserInterfaceLevelData.elevated,
           child: DependentWidget(color: dynamicRainbowColor1),
@@ -401,7 +405,7 @@ void main() {
 
     await tester.pumpWidget(
       const MediaQuery(
-        data: MediaQueryData(platformBrightness: Brightness.light, highContrast: false),
+        data: MediaQueryData(),
         child: CupertinoUserInterfaceLevel(
           data: CupertinoUserInterfaceLevelData.elevated,
           child: DependentWidget(color: dynamicRainbowColor1),
@@ -423,7 +427,7 @@ void main() {
           builder: (BuildContext context) {
             color = CupertinoTheme.of(context).primaryColor as CupertinoDynamicColor;
             return const Placeholder();
-          }
+          },
         ),
       ),
     );
@@ -441,7 +445,7 @@ void main() {
           builder: (BuildContext context) {
             color = CupertinoTheme.of(context).primaryColor as CupertinoDynamicColor;
             return const Placeholder();
-          }
+          },
         ),
       ),
     );
@@ -453,14 +457,14 @@ void main() {
       CupertinoApp(
         theme: const CupertinoThemeData(primaryColor: dynamicColor),
         home: MediaQuery(
-          data: const MediaQueryData(platformBrightness: Brightness.light, highContrast: false),
+          data: const MediaQueryData(),
           child: CupertinoUserInterfaceLevel(
             data: CupertinoUserInterfaceLevelData.base,
             child: Builder(
               builder: (BuildContext context) {
                 color = CupertinoTheme.of(context).primaryColor as CupertinoDynamicColor;
                 return const Placeholder();
-              }
+              },
             ),
           ),
         ),
@@ -482,7 +486,7 @@ void main() {
               builder: (BuildContext context) {
                 color = CupertinoTheme.of(context).primaryColor as CupertinoDynamicColor;
                 return const Placeholder();
-              }
+              },
             ),
           ),
         ),
@@ -497,7 +501,7 @@ void main() {
     setUp(() { color = null; });
 
     testWidgets('dynamic color works in cupertino override theme', (WidgetTester tester) async {
-      final CupertinoDynamicColor Function() typedColor = () => color! as CupertinoDynamicColor;
+      CupertinoDynamicColor typedColor() => color! as CupertinoDynamicColor;
 
       await tester.pumpWidget(
         MaterialApp(
@@ -508,14 +512,14 @@ void main() {
             ),
           ),
           home: MediaQuery(
-            data: const MediaQueryData(platformBrightness: Brightness.light, highContrast: false),
+            data: const MediaQueryData(),
             child: CupertinoUserInterfaceLevel(
               data: CupertinoUserInterfaceLevelData.base,
               child: Builder(
                 builder: (BuildContext context) {
                   color = CupertinoTheme.of(context).primaryColor;
                   return const Placeholder();
-                }
+                },
               ),
             ),
           ),
@@ -543,7 +547,7 @@ void main() {
                 builder: (BuildContext context) {
                   color = CupertinoTheme.of(context).primaryColor;
                   return const Placeholder();
-                }
+                },
               ),
             ),
           ),
@@ -566,7 +570,7 @@ void main() {
                 builder: (BuildContext context) {
                   color = CupertinoTheme.of(context).primaryColor;
                   return const Placeholder();
-                }
+                },
               ),
             ),
           ),

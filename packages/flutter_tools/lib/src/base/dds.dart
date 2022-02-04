@@ -13,38 +13,33 @@ import 'logger.dart';
 
 @visibleForTesting
 Future<dds.DartDevelopmentService> Function(
-  Uri,
-  {bool enableAuthCodes,
+  Uri remoteVmServiceUri, {
+  bool enableAuthCodes,
   bool ipv6,
-  Uri serviceUri,
+  Uri? serviceUri,
 }) ddsLauncherCallback = dds.DartDevelopmentService.startDartDevelopmentService;
 
 /// Helper class to launch a [dds.DartDevelopmentService]. Allows for us to
 /// mock out this functionality for testing purposes.
 class DartDevelopmentService {
-  DartDevelopmentService({@required this.logger});
+  dds.DartDevelopmentService? _ddsInstance;
 
-  final Logger logger;
-  dds.DartDevelopmentService _ddsInstance;
-
-  Uri get uri => _ddsInstance?.uri ?? _existingDdsUri;
-  Uri _existingDdsUri;
+  Uri? get uri => _ddsInstance?.uri ?? _existingDdsUri;
+  Uri? _existingDdsUri;
 
   Future<void> get done => _completer.future;
   final Completer<void> _completer = Completer<void>();
 
   Future<void> startDartDevelopmentService(
-    Uri observatoryUri,
-    int hostPort,
-    bool ipv6,
-    bool disableServiceAuthCodes,
-  ) async {
+    Uri observatoryUri, {
+    required Logger logger,
+    int? hostPort,
+    bool? ipv6,
+    bool? disableServiceAuthCodes,
+  }) async {
     final Uri ddsUri = Uri(
       scheme: 'http',
-      host: (ipv6 ?
-        io.InternetAddress.loopbackIPv6 :
-        io.InternetAddress.loopbackIPv4
-      ).host,
+      host: (ipv6 == true ? io.InternetAddress.loopbackIPv6 : io.InternetAddress.loopbackIPv4).host,
       port: hostPort ?? 0,
     );
     logger.printTrace(
@@ -55,15 +50,15 @@ class DartDevelopmentService {
       _ddsInstance = await ddsLauncherCallback(
           observatoryUri,
           serviceUri: ddsUri,
-          enableAuthCodes: !disableServiceAuthCodes,
-          ipv6: ipv6,
+          enableAuthCodes: disableServiceAuthCodes != true,
+          ipv6: ipv6 == true,
         );
-      unawaited(_ddsInstance.done.whenComplete(() {
+      unawaited(_ddsInstance?.done.whenComplete(() {
         if (!_completer.isCompleted) {
           _completer.complete();
         }
       }));
-      logger.printTrace('DDS is listening at ${_ddsInstance.uri}.');
+      logger.printTrace('DDS is listening at ${_ddsInstance?.uri}.');
     } on dds.DartDevelopmentServiceException catch (e) {
       logger.printTrace('Warning: Failed to start DDS: ${e.message}');
       if (e.errorCode == dds.DartDevelopmentServiceException.existingDdsInstanceError) {
@@ -74,7 +69,6 @@ class DartDevelopmentService {
         } on StateError {
           if (e.message.contains('Existing VM service clients prevent DDS from taking control.')) {
             throwToolExit('${e.message}. Please rebuild your application with a newer version of Flutter.');
-            return;
           }
           logger.printError(
             'DDS has failed to start and there is not an existing DDS instance '
@@ -93,5 +87,5 @@ class DartDevelopmentService {
     }
   }
 
-  Future<void> shutdown() async => await _ddsInstance?.shutdown();
+  Future<void> shutdown() async => _ddsInstance?.shutdown();
 }

@@ -4,12 +4,10 @@
 
 import 'dart:io';
 
-import 'package:flutter_devicelab/tasks/perf_tests.dart';
-
-
 import '../framework/task_result.dart';
 import '../framework/utils.dart';
 import '../versions/gallery.dart' show galleryVersion;
+import 'perf_tests.dart';
 
 class NewGalleryPerfTest extends PerfTest {
   NewGalleryPerfTest(
@@ -29,7 +27,7 @@ class NewGalleryPerfTest extends PerfTest {
     // turns out to be updated frequently in the future, we can set up an auto
     // roller to update this version.
     await getNewGallery(galleryVersion, galleryDir);
-    return await super.run();
+    return super.run();
   }
 
   final Directory galleryDir;

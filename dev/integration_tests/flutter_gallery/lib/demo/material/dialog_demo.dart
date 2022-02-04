@@ -33,8 +33,6 @@ class DialogDemoItem extends StatelessWidget {
     return SimpleDialogOption(
       onPressed: onPressed,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           Icon(icon, size: 36.0, color: color),
           Padding(
@@ -48,6 +46,8 @@ class DialogDemoItem extends StatelessWidget {
 }
 
 class DialogDemo extends StatefulWidget {
+  const DialogDemo({Key? key}) : super(key: key);
+
   static const String routeName = '/material/dialog';
 
   @override
@@ -192,7 +192,7 @@ class DialogDemoState extends State<DialogDemo> {
             child: const Text('FULLSCREEN'),
             onPressed: () {
               Navigator.push(context, MaterialPageRoute<DismissDialogAction>(
-                builder: (BuildContext context) => FullScreenDialogDemo(),
+                builder: (BuildContext context) => const FullScreenDialogDemo(),
                 fullscreenDialog: true,
               ));
             },

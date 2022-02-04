@@ -4,13 +4,14 @@
 
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/material.dart';
 
+import '../rendering/mock_canvas.dart';
 import '../widgets/semantics_tester.dart';
+import 'feedback_tester.dart';
 
 Widget wrap({Widget? child}) {
   return MediaQuery(
@@ -23,8 +24,7 @@ Widget wrap({Widget? child}) {
 }
 
 void main() {
-  testWidgets('RadioListTile should initialize according to groupValue',
-      (WidgetTester tester) async {
+  testWidgets('RadioListTile should initialize according to groupValue', (WidgetTester tester) async {
     final List<int> values = <int>[0, 1, 2];
     int? selectedValue;
     // Constructor parameters are required for [RadioListTile], but they are
@@ -275,8 +275,7 @@ void main() {
     expect(log, equals(<int>[0]));
   });
 
-  testWidgets('Selected RadioListTile should trigger onChanged when toggleable',
-      (WidgetTester tester) async {
+  testWidgets('Selected RadioListTile should trigger onChanged when toggleable', (WidgetTester tester) async {
     final List<int> values = <int>[0, 1, 2];
     int? selectedValue;
     // Constructor parameters are required for [Radio], but they are irrelevant
@@ -539,7 +538,7 @@ void main() {
     final Key key = UniqueKey();
     dynamic semanticEvent;
     int? radioValue = 2;
-    SystemChannels.accessibility.setMockMessageHandler((dynamic message) async {
+    tester.binding.defaultBinaryMessenger.setMockDecodedMessageHandler<dynamic>(SystemChannels.accessibility, (dynamic message) async {
       semanticEvent = message;
     });
 
@@ -570,7 +569,7 @@ void main() {
     expect(object.debugSemantics!.getSemanticsData().hasAction(SemanticsAction.tap), true);
 
     semantics.dispose();
-    SystemChannels.accessibility.setMockMessageHandler(null);
+    tester.binding.defaultBinaryMessenger.setMockDecodedMessageHandler<dynamic>(SystemChannels.accessibility, null);
   });
 
   testWidgets('RadioListTile can autofocus unless disabled.', (WidgetTester tester) async {
@@ -623,12 +622,12 @@ void main() {
             title: const Text('Title'),
             onChanged: (_){},
             contentPadding: const EdgeInsets.fromLTRB(8, 10, 15, 20),
-          )
-        )
-      )
+          ),
+        ),
+      ),
     );
 
-    final Rect paddingRect = tester.getRect(find.byType(Padding));
+    final Rect paddingRect = tester.getRect(find.byType(SafeArea));
     final Rect radioRect = tester.getRect(find.byType(radioType));
     final Rect titleRect = tester.getRect(find.text('Title'));
 
@@ -668,37 +667,36 @@ void main() {
   });
 
   testWidgets('RadioListTile respects tileColor', (WidgetTester tester) async {
-    const Color tileColor = Colors.red;
+    final Color tileColor = Colors.red.shade500;
 
     await tester.pumpWidget(
       wrap(
-        child: const Center(
+        child: Center(
           child: RadioListTile<bool>(
             value: false,
             groupValue: true,
             onChanged: null,
-            title: Text('Title'),
+            title: const Text('Title'),
             tileColor: tileColor,
           ),
         ),
       ),
     );
 
-    final ColoredBox coloredBox = tester.firstWidget(find.byType(ColoredBox));
-    expect(coloredBox.color, tileColor);
+    expect(find.byType(Material), paints..path(color: tileColor));
   });
 
   testWidgets('RadioListTile respects selectedTileColor', (WidgetTester tester) async {
-    const Color selectedTileColor = Colors.black;
+    final Color selectedTileColor = Colors.green.shade500;
 
     await tester.pumpWidget(
       wrap(
-        child: const Center(
+        child: Center(
           child: RadioListTile<bool>(
             value: false,
             groupValue: true,
             onChanged: null,
-            title: Text('Title'),
+            title: const Text('Title'),
             selected: true,
             selectedTileColor: selectedTileColor,
           ),
@@ -706,7 +704,134 @@ void main() {
       ),
     );
 
-    final ColoredBox coloredBox = tester.firstWidget(find.byType(ColoredBox));
-    expect(coloredBox.color, equals(selectedTileColor));
+    expect(find.byType(Material), paints..path(color: selectedTileColor));
+  });
+
+  testWidgets('RadioListTile selected item text Color', (WidgetTester tester) async {
+    // Regression test for https://github.com/flutter/flutter/pull/76906
+
+    const Color activeColor = Color(0xff00ff00);
+
+    Widget buildFrame({ Color? activeColor, Color? toggleableActiveColor }) {
+      return MaterialApp(
+        theme: ThemeData.light().copyWith(
+          toggleableActiveColor: toggleableActiveColor,
+        ),
+        home: Scaffold(
+          body: Center(
+            child: RadioListTile<bool>(
+              activeColor: activeColor,
+              selected: true,
+              title: const Text('title'),
+              value: false,
+              groupValue: true,
+              onChanged: (bool? newValue) { },
+            ),
+          ),
+        ),
+      );
+    }
+
+    Color? textColor(String text) {
+      return tester.renderObject<RenderParagraph>(find.text(text)).text.style?.color;
+    }
+
+    await tester.pumpWidget(buildFrame(toggleableActiveColor: activeColor));
+    expect(textColor('title'), activeColor);
+
+    await tester.pumpWidget(buildFrame(activeColor: activeColor));
+    expect(textColor('title'), activeColor);
+  });
+
+  testWidgets('RadioListTile respects visualDensity', (WidgetTester tester) async {
+    const Key key = Key('test');
+    Future<void> buildTest(VisualDensity visualDensity) async {
+      return tester.pumpWidget(
+        wrap(
+          child: Center(
+            child: RadioListTile<bool>(
+              key: key,
+              value: false,
+              groupValue: true,
+              onChanged: (bool? value) {},
+              autofocus: true,
+              visualDensity: visualDensity,
+            ),
+          ),
+        ),
+      );
+    }
+
+    await buildTest(VisualDensity.standard);
+    final RenderBox box = tester.renderObject(find.byKey(key));
+    await tester.pumpAndSettle();
+    expect(box.size, equals(const Size(800, 56)));
+  });
+
+  testWidgets('RadioListTile respects focusNode', (WidgetTester tester) async {
+    final GlobalKey childKey = GlobalKey();
+    await tester.pumpWidget(
+      wrap(
+        child: Center(
+          child: RadioListTile<bool>(
+            value: false,
+            groupValue: true,
+            title: Text('A', key: childKey),
+            onChanged: (bool? value) {},
+          ),
+        ),
+      ),
+    );
+
+    await tester.pump();
+    final FocusNode tileNode = Focus.of(childKey.currentContext!);
+    tileNode.requestFocus();
+    await tester.pump(); // Let the focus take effect.
+    expect(Focus.of(childKey.currentContext!).hasPrimaryFocus, isTrue);
+    expect(tileNode.hasPrimaryFocus, isTrue);
+  });
+
+  group('feedback', () {
+    late FeedbackTester feedback;
+
+    setUp(() {
+      feedback = FeedbackTester();
+    });
+
+    tearDown(() {
+      feedback.dispose();
+    });
+
+    testWidgets('RadioListTile respects enableFeedback', (WidgetTester tester) async {
+      const Key key = Key('test');
+      Future<void> buildTest(bool enableFeedback) async {
+        return tester.pumpWidget(
+          wrap(
+            child: Center(
+              child: RadioListTile<bool>(
+                key: key,
+                value: false,
+                groupValue: true,
+                selected: true,
+                onChanged: (bool? value) {},
+                enableFeedback: enableFeedback,
+              ),
+            ),
+          ),
+        );
+      }
+
+      await buildTest(false);
+      await tester.tap(find.byKey(key));
+      await tester.pump(const Duration(seconds: 1));
+      expect(feedback.clickSoundCount, 0);
+      expect(feedback.hapticCount, 0);
+
+      await buildTest(true);
+      await tester.tap(find.byKey(key));
+      await tester.pump(const Duration(seconds: 1));
+      expect(feedback.clickSoundCount, 1);
+      expect(feedback.hapticCount, 0);
+    });
   });
 }

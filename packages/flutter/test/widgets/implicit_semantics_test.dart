@@ -4,7 +4,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'semantics_tester.dart';
@@ -18,7 +17,6 @@ void main() {
         textDirection: TextDirection.ltr,
         child: Semantics(
           container: true,
-          explicitChildNodes: false,
           child: Column(
             children: const <Widget>[
               Text('Michael Goderbauer'),
@@ -140,7 +138,6 @@ void main() {
         textDirection: TextDirection.ltr,
         child: Semantics(
           container: true,
-          explicitChildNodes: false,
           child: Semantics(
             label: 'Signed in as',
             child: Column(
@@ -183,7 +180,6 @@ void main() {
         textDirection: TextDirection.ltr,
         child: Semantics(
           container: true,
-          explicitChildNodes: false,
           child: Column(
             children: <Widget>[
               Semantics(

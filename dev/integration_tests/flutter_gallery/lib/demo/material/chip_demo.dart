@@ -135,10 +135,12 @@ class _ChipsTile extends StatelessWidget {
 }
 
 class ChipDemo extends StatefulWidget {
+  const ChipDemo({Key? key}) : super(key: key);
+
   static const String routeName = '/material/chip';
 
   @override
-  _ChipDemoState createState() => _ChipDemoState();
+  State<ChipDemo> createState() => _ChipDemoState();
 }
 
 class _ChipDemoState extends State<ChipDemo> {
@@ -218,7 +220,8 @@ class _ChipDemoState extends State<ChipDemo> {
     if (_selectedAction.isEmpty) {
       return '';
     }
-    return _capitalize(_results[_selectedAction]!) + '!';
+    final String value = _capitalize(_results[_selectedAction]!);
+    return '$value!';
   }
 
   @override
@@ -341,7 +344,7 @@ class _ChipDemoState extends State<ChipDemo> {
         data: _showShapeBorder
             ? theme.chipTheme.copyWith(
                 shape: BeveledRectangleBorder(
-                side: const BorderSide(width: 0.66, style: BorderStyle.solid, color: Colors.grey),
+                side: const BorderSide(width: 0.66, color: Colors.grey),
                 borderRadius: BorderRadius.circular(10.0),
               ))
             : theme.chipTheme,

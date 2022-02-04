@@ -6,22 +6,29 @@ import 'dart:io' hide Platform;
 
 import 'package:file/file.dart' as fs;
 import 'package:file/memory.dart';
-import 'package:mockito/mockito.dart';
 import 'package:path/path.dart' as path;
 import 'package:process/process.dart';
 
 import '../test.dart';
 import 'common.dart';
 
-class MockFile extends Mock implements File {}
+/// Fails a test if the exit code of `result` is not the expected value. This
+/// is favored over `expect(result.exitCode, expectedExitCode)` because this
+/// will include the process result's stdio in the failure message.
+void expectExitCode(ProcessResult result, int expectedExitCode) {
+  if (result.exitCode != expectedExitCode) {
+    fail('Failure due to exit code ${result.exitCode}\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}');
+  }
+}
 
 void main() {
-  MockFile file;
-  setUp(() {
-    file = MockFile();
-    when(file.existsSync()).thenReturn(true);
-  });
   group('verifyVersion()', () {
+    late MemoryFileSystem fileSystem;
+
+    setUp(() {
+      fileSystem = MemoryFileSystem.test();
+    });
+
     test('passes for valid version strings', () async {
       const List<String> valid_versions = <String>[
         '1.2.3',
@@ -31,7 +38,9 @@ void main() {
         '1.2.3-5.0.pre.12',
       ];
       for (final String version in valid_versions) {
-        when(file.readAsString()).thenAnswer((Invocation invocation) => Future<String>.value(version));
+        final File file = fileSystem.file('version');
+        file.writeAsStringSync(version);
+
         expect(
           await verifyVersion(file),
           isNull,
@@ -51,7 +60,9 @@ void main() {
         '1.2.3-hotfix.1',
       ];
       for (final String version in invalid_versions) {
-        when(file.readAsString()).thenAnswer((Invocation invocation) => Future<String>.value(version));
+        final File file = fileSystem.file('version');
+        file.writeAsStringSync(version);
+
         expect(
           await verifyVersion(file),
           'The version logic generated an invalid version string: "$version".',
@@ -86,7 +97,11 @@ void main() {
     const ProcessManager processManager = LocalProcessManager();
 
     Future<ProcessResult> runScript(
+<<<<<<< HEAD
         [Map<String, String> environment, List<String> otherArgs = const <String>[]]) async {
+=======
+        [Map<String, String>? environment, List<String> otherArgs = const <String>[]]) async {
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
       final String dart = path.absolute(
           path.join('..', '..', 'bin', 'cache', 'dart-sdk', 'bin', 'dart'));
       final ProcessResult scriptProcess = processManager.runSync(<String>[
@@ -98,6 +113,7 @@ void main() {
     }
 
     test('subshards tests correctly', () async {
+<<<<<<< HEAD
       ProcessResult result = await runScript(
         <String, String>{'SHARD': 'smoke_tests', 'SUBSHARD': '1_3'},
       );
@@ -111,13 +127,32 @@ void main() {
       expect(result.exitCode, 0);
       // This shard should contain only test 5.
       expect(result.stdout, contains('Selecting subshard 5 of 6 (range 5-5 of 6)'));
+=======
+      // When updating this test, try to pick shard numbers that ensure we're checking
+      // that unequal test distributions don't miss tests.
+      ProcessResult result = await runScript(
+        <String, String>{'SHARD': 'smoke_tests', 'SUBSHARD': '1_3'},
+      );
+      expectExitCode(result, 0);
+      expect(result.stdout, contains('Selecting subshard 1 of 3 (range 1-3 of 8)'));
+
+      result = await runScript(
+        <String, String>{'SHARD': 'smoke_tests', 'SUBSHARD': '3_3'},
+      );
+      expectExitCode(result, 0);
+      expect(result.stdout, contains('Selecting subshard 3 of 3 (range 7-8 of 8)'));
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
     });
 
     test('exits with code 1 when SUBSHARD index greater than total', () async {
       final ProcessResult result = await runScript(
         <String, String>{'SHARD': 'smoke_tests', 'SUBSHARD': '100_99'},
       );
+<<<<<<< HEAD
       expect(result.exitCode, 1);
+=======
+      expectExitCode(result, 1);
+>>>>>>> 5f105a6ca7a5ac7b8bc9b241f4c2d86f4188cf5c
       expect(result.stdout, contains('Invalid subshard name'));
     });
   });

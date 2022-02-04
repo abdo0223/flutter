@@ -3,15 +3,14 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 import '../rendering/mock_canvas.dart';
 
 void verify(WidgetTester tester, List<Offset> answerKey) {
   final List<Offset> testAnswers = tester.renderObjectList<RenderBox>(find.byType(SizedBox)).map<Offset>(
-    (RenderBox target) => target.localToGlobal(Offset.zero)
+    (RenderBox target) => target.localToGlobal(Offset.zero),
   ).toList();
   expect(testAnswers, equals(answerKey));
 }
@@ -20,7 +19,6 @@ void main() {
   testWidgets('Basic Wrap test (LTR)', (WidgetTester tester) async {
     await tester.pumpWidget(
       Wrap(
-        alignment: WrapAlignment.start,
         textDirection: TextDirection.ltr,
         children: const <Widget>[
           SizedBox(width: 300.0, height: 100.0),
@@ -31,7 +29,7 @@ void main() {
       ),
     );
     verify(tester, <Offset>[
-      const Offset(0.0, 0.0),
+      Offset.zero,
       const Offset(300.0, 0.0),
       const Offset(0.0, 100.0),
       const Offset(300.0, 100.0),
@@ -77,8 +75,6 @@ void main() {
 
     await tester.pumpWidget(
       Wrap(
-        alignment: WrapAlignment.start,
-        crossAxisAlignment: WrapCrossAlignment.start,
         textDirection: TextDirection.ltr,
         children: const <Widget>[
           SizedBox(width: 300.0, height: 50.0),
@@ -89,7 +85,7 @@ void main() {
       ),
     );
     verify(tester, <Offset>[
-      const Offset(0.0, 0.0),
+      Offset.zero,
       const Offset(300.0, 0.0),
       const Offset(0.0, 100.0),
       const Offset(300.0, 100.0),
@@ -97,7 +93,6 @@ void main() {
 
     await tester.pumpWidget(
       Wrap(
-        alignment: WrapAlignment.start,
         crossAxisAlignment: WrapCrossAlignment.center,
         textDirection: TextDirection.ltr,
         children: const <Widget>[
@@ -117,7 +112,6 @@ void main() {
 
     await tester.pumpWidget(
       Wrap(
-        alignment: WrapAlignment.start,
         crossAxisAlignment: WrapCrossAlignment.end,
         textDirection: TextDirection.ltr,
         children: const <Widget>[
@@ -140,7 +134,6 @@ void main() {
   testWidgets('Basic Wrap test (RTL)', (WidgetTester tester) async {
     await tester.pumpWidget(
       Wrap(
-        alignment: WrapAlignment.start,
         textDirection: TextDirection.rtl,
         children: const <Widget>[
           SizedBox(width: 300.0, height: 100.0),
@@ -190,15 +183,13 @@ void main() {
     );
     verify(tester, <Offset>[
       const Offset(300.0, 0.0),
-      const Offset(0.0, 0.0),
+      Offset.zero,
       const Offset(300.0, 100.0),
       const Offset(0.0, 100.0),
     ]);
 
     await tester.pumpWidget(
       Wrap(
-        alignment: WrapAlignment.start,
-        crossAxisAlignment: WrapCrossAlignment.start,
         textDirection: TextDirection.ltr,
         verticalDirection: VerticalDirection.up,
         children: const <Widget>[
@@ -218,7 +209,6 @@ void main() {
 
     await tester.pumpWidget(
       Wrap(
-        alignment: WrapAlignment.start,
         crossAxisAlignment: WrapCrossAlignment.center,
         textDirection: TextDirection.ltr,
         verticalDirection: VerticalDirection.up,
@@ -239,7 +229,6 @@ void main() {
 
     await tester.pumpWidget(
       Wrap(
-        alignment: WrapAlignment.start,
         crossAxisAlignment: WrapCrossAlignment.end,
         textDirection: TextDirection.ltr,
         verticalDirection: VerticalDirection.up,
@@ -295,7 +284,7 @@ void main() {
     ));
     expect(tester.renderObject<RenderBox>(find.byType(Wrap)).size, equals(const Size(800.0, 600.0)));
     verify(tester, <Offset>[
-      const Offset(0.0, 0.0),
+      Offset.zero,
       const Offset(200.0, 0.0),
       const Offset(500.0, 0.0),
     ]);
@@ -367,7 +356,7 @@ void main() {
     verify(tester, <Offset>[
       const Offset(700.0, 0.0),
       const Offset(400.0, 0.0),
-      const Offset(0.0, 0.0),
+      Offset.zero,
     ]);
 
     await tester.pumpWidget(Wrap(
@@ -441,7 +430,7 @@ void main() {
     ));
     expect(tester.renderObject<RenderBox>(find.byType(Wrap)).size, equals(const Size(800.0, 600.0)));
     verify(tester, <Offset>[
-      const Offset(0.0, 0.0),
+      Offset.zero,
       const Offset(100.0, 0.0),
       const Offset(300.0, 0.0),
       const Offset(0.0, 265.0),
@@ -534,7 +523,7 @@ void main() {
       const Offset(100.0, 580.0),
       const Offset(300.0, 570.0),
       const Offset(0.0, 295.0),
-      const Offset(0.0, 0.0),
+      Offset.zero,
     ]);
 
     await tester.pumpWidget(Wrap(
@@ -626,7 +615,7 @@ void main() {
     );
     expect(tester.renderObject<RenderBox>(find.byType(Wrap)).size, equals(const Size(700.0, 60.0)));
     verify(tester, <Offset>[
-      const Offset(0.0, 0.0),
+      Offset.zero,
       const Offset(400.0, 10.0),
       const Offset(400.0, 40.0),
       const Offset(600.0, 50.0),
@@ -639,8 +628,6 @@ void main() {
         alignment: Alignment.topLeft,
         child: Wrap(
           runSpacing: 10.0,
-          alignment: WrapAlignment.start,
-          crossAxisAlignment: WrapCrossAlignment.start,
           textDirection: TextDirection.ltr,
           children: const <Widget>[
             SizedBox(width: 500.0, height: 10.0),
@@ -653,7 +640,7 @@ void main() {
     );
     expect(tester.renderObject<RenderBox>(find.byType(Wrap)).size, equals(const Size(500.0, 130.0)));
     verify(tester, <Offset>[
-      const Offset(0.0, 0.0),
+      Offset.zero,
       const Offset(0.0, 20.0),
       const Offset(0.0, 50.0),
       const Offset(0.0, 90.0),
@@ -668,8 +655,6 @@ void main() {
           direction: Axis.vertical,
           spacing: 10.0,
           runSpacing: 15.0,
-          alignment: WrapAlignment.start,
-          crossAxisAlignment: WrapCrossAlignment.start,
           textDirection: TextDirection.ltr,
           children: const <Widget>[
             SizedBox(width: 10.0, height: 250.0),
@@ -684,7 +669,7 @@ void main() {
     );
     expect(tester.renderObject<RenderBox>(find.byType(Wrap)).size, equals(const Size(150.0, 510.0)));
     verify(tester, <Offset>[
-      const Offset(0.0, 0.0),
+      Offset.zero,
       const Offset(0.0, 260.0),
       const Offset(35.0, 0.0),
       const Offset(35.0, 260.0),
@@ -696,7 +681,6 @@ void main() {
       Align(
         alignment: Alignment.topLeft,
         child: Wrap(
-          direction: Axis.horizontal,
           spacing: 12.0,
           runSpacing: 8.0,
           textDirection: TextDirection.ltr,
@@ -713,7 +697,7 @@ void main() {
     );
     expect(tester.renderObject<RenderBox>(find.byType(Wrap)).size, equals(const Size(270.0, 250.0)));
     verify(tester, <Offset>[
-      const Offset(0.0, 0.0),
+      Offset.zero,
       const Offset(22.0, 0.0),
       const Offset(54.0, 0.0),
       const Offset(96.0, 0.0),
@@ -827,13 +811,14 @@ void main() {
       ),
     );
     expect(tester.renderObject<RenderBox>(find.text('X')).size, const Size(100.0, 100.0));
-    expect(tester.renderObject<RenderBox>(find.byType(Baseline)).size,
-           within<Size>(from: const Size(100.0, 200.0), distance: 0.001));
+    expect(
+      tester.renderObject<RenderBox>(find.byType(Baseline)).size,
+      within<Size>(from: const Size(100.0, 200.0), distance: 0.001),
+    );
   });
 
   testWidgets('Spacing with slight overflow', (WidgetTester tester) async {
     await tester.pumpWidget(Wrap(
-      direction: Axis.horizontal,
       textDirection: TextDirection.ltr,
       spacing: 10.0,
       runSpacing: 10.0,
@@ -847,7 +832,7 @@ void main() {
 
     expect(tester.renderObject<RenderBox>(find.byType(Wrap)).size, equals(const Size(800.0, 600.0)));
     verify(tester, <Offset>[
-      const Offset(0.0, 0.0),
+      Offset.zero,
       const Offset(210.0, 0.0),
       const Offset(420.0, 0.0),
       const Offset(0.0, 20.0),
@@ -859,7 +844,6 @@ void main() {
       Column(
         children: <Widget>[
           Wrap(
-            direction: Axis.horizontal,
             textDirection: TextDirection.ltr,
             spacing: 10.0,
             runSpacing: 10.0,
@@ -872,13 +856,12 @@ void main() {
     );
 
     expect(tester.renderObject<RenderBox>(find.byType(Wrap)).size, equals(const Size(800.0, 10.0)));
-    verify(tester, <Offset>[const Offset(0.0, 0.0)]);
+    verify(tester, <Offset>[Offset.zero]);
 
     await tester.pumpWidget(
       Column(
         children: <Widget>[
           Wrap(
-            direction: Axis.horizontal,
             textDirection: TextDirection.ltr,
             spacing: 10.0,
             runSpacing: 10.0,
@@ -893,7 +876,7 @@ void main() {
 
     expect(tester.renderObject<RenderBox>(find.byType(Wrap)).size, equals(const Size(800.0, 30.0)));
     verify(tester, <Offset>[
-      const Offset(0.0, 0.0),
+      Offset.zero,
       const Offset(0.0, 20.0),
     ]);
   });

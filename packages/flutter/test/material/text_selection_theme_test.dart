@@ -2,10 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/src/material/selectable_text.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../rendering/mock_canvas.dart';
@@ -56,23 +54,29 @@ void main() {
   });
 
   testWidgets('Empty textSelectionTheme will use defaults', (WidgetTester tester) async {
-    const Color defaultCursorColor = Color(0x002196f3);
+    const Color defaultCursorColor = Color(0xff2196f3);
     const Color defaultSelectionColor = Color(0x662196f3);
     const Color defaultSelectionHandleColor = Color(0xff2196f3);
 
+    EditableText.debugDeterministicCursor = true;
+    addTearDown(() {
+      EditableText.debugDeterministicCursor = false;
+    });
     // Test TextField's cursor & selection color.
     await tester.pumpWidget(
       const MaterialApp(
         home: Material(
-          child: TextField(),
+          child: TextField(autofocus: true),
         ),
       ),
     );
+    await tester.pump();
     await tester.pumpAndSettle();
+
     final EditableTextState editableTextState = tester.firstState(find.byType(EditableText));
     final RenderEditable renderEditable = editableTextState.renderEditable;
     expect(renderEditable.cursorColor, defaultCursorColor);
-    expect(Color(renderEditable.selectionColor!.value), defaultSelectionColor);
+    expect(renderEditable.selectionColor?.value, defaultSelectionColor.value);
 
     // Test the selection handle color.
     await tester.pumpWidget(
@@ -81,7 +85,9 @@ void main() {
           child: Builder(
             builder: (BuildContext context) {
               return materialTextSelectionControls.buildHandle(
-                context, TextSelectionHandleType.left, 10.0
+                context,
+                TextSelectionHandleType.left,
+                10.0,
               );
             },
           ),
@@ -103,19 +109,25 @@ void main() {
       textSelectionTheme: textSelectionTheme,
     );
 
+    EditableText.debugDeterministicCursor = true;
+    addTearDown(() {
+      EditableText.debugDeterministicCursor = false;
+    });
+
     // Test TextField's cursor & selection color.
     await tester.pumpWidget(
       MaterialApp(
         theme: theme,
         home: const Material(
-          child: TextField(),
+          child: TextField(autofocus: true),
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+
     final EditableTextState editableTextState = tester.firstState(find.byType(EditableText));
     final RenderEditable renderEditable = editableTextState.renderEditable;
-    expect(renderEditable.cursorColor, textSelectionTheme.cursorColor!.withAlpha(0));
+    expect(renderEditable.cursorColor, textSelectionTheme.cursorColor);
     expect(renderEditable.selectionColor, textSelectionTheme.selectionColor);
 
     // Test the selection handle color.
@@ -126,7 +138,9 @@ void main() {
           child: Builder(
             builder: (BuildContext context) {
               return materialTextSelectionControls.buildHandle(
-                  context, TextSelectionHandleType.left, 10.0
+                context,
+                TextSelectionHandleType.left,
+                10.0,
               );
             },
           ),
@@ -153,6 +167,10 @@ void main() {
       selectionHandleColor: Color(0x00ffeedd),
     );
 
+    EditableText.debugDeterministicCursor = true;
+    addTearDown(() {
+      EditableText.debugDeterministicCursor = false;
+    });
     // Test TextField's cursor & selection color.
     await tester.pumpWidget(
       MaterialApp(
@@ -160,15 +178,15 @@ void main() {
         home: const Material(
           child: TextSelectionTheme(
             data: widgetTextSelectionTheme,
-            child: TextField(),
+            child: TextField(autofocus: true),
           ),
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
     final EditableTextState editableTextState = tester.firstState(find.byType(EditableText));
     final RenderEditable renderEditable = editableTextState.renderEditable;
-    expect(renderEditable.cursorColor, widgetTextSelectionTheme.cursorColor!.withAlpha(0));
+    expect(renderEditable.cursorColor, widgetTextSelectionTheme.cursorColor);
     expect(renderEditable.selectionColor, widgetTextSelectionTheme.selectionColor);
 
     // Test the selection handle color.
@@ -181,7 +199,9 @@ void main() {
             child: Builder(
               builder: (BuildContext context) {
                 return materialTextSelectionControls.buildHandle(
-                    context, TextSelectionHandleType.left, 10.0
+                  context,
+                  TextSelectionHandleType.left,
+                  10.0,
                 );
               },
             ),

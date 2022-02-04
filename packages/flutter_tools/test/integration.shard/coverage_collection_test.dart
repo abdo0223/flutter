@@ -12,7 +12,7 @@ import 'test_driver.dart';
 import 'test_utils.dart';
 
 void main() {
-  Directory tempDir;
+  late Directory tempDir;
 
   setUp(() async {
     tempDir = createResolvedTempDirectorySync('flutter_coverage_collection_test.');

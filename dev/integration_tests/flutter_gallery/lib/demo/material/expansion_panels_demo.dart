@@ -18,11 +18,12 @@ typedef ValueToString<T> = String? Function(T value);
 
 class DualHeaderWithHint extends StatelessWidget {
   const DualHeaderWithHint({
+    Key? key,
     this.name,
     this.value,
     this.hint,
     this.showHint,
-  });
+  }) : super(key: key);
 
   final String? name;
   final String? value;
@@ -80,11 +81,12 @@ class DualHeaderWithHint extends StatelessWidget {
 
 class CollapsibleBody extends StatelessWidget {
   const CollapsibleBody({
+    Key? key,
     this.margin = EdgeInsets.zero,
     this.child,
     this.onSave,
     this.onCancel,
-  });
+  }) : super(key: key);
 
   final EdgeInsets margin;
   final Widget? child;
@@ -175,10 +177,12 @@ class DemoItem<T> {
 }
 
 class ExpansionPanelsDemo extends StatefulWidget {
+  const ExpansionPanelsDemo({Key? key}) : super(key: key);
+
   static const String routeName = '/material/expansion_panels';
 
   @override
-  _ExpansionPanelsDemoState createState() => _ExpansionPanelsDemoState();
+  State<ExpansionPanelsDemo> createState() => _ExpansionPanelsDemoState();
 }
 
 class _ExpansionPanelsDemoState extends State<ExpansionPanelsDemo> {
@@ -304,7 +308,6 @@ class _ExpansionPanelsDemoState extends State<ExpansionPanelsDemo> {
                         // Allow room for the value indicator.
                         padding: const EdgeInsets.only(top: 44.0),
                         child: Slider(
-                          min: 0.0,
                           max: 100.0,
                           divisions: 5,
                           activeColor: Colors.orange[100 + (field.value! * 5.0).round()],

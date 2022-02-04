@@ -2,10 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:io';
+// @dart = 2.8
 
 import 'package:file/file.dart';
-import 'package:matcher/matcher.dart';
 
 import 'package:vm_service/vm_service.dart';
 
@@ -169,7 +168,7 @@ Future<void> evaluateComplexReturningExpressions(FlutterTestDriver flutter) asyn
   // Ensure we got a reasonable approximation. The more accurate we try to
   // make this, the more likely it'll fail due to differences in the time
   // in the remote VM and the local VM at the time the code runs.
-  final InstanceRef res = await flutter.evaluate(resp.id, r'"$year-$month-$day"');
+  final ObjRef res = await flutter.evaluate(resp.id, r'"$year-$month-$day"');
   expectValue(res, '${now.year}-${now.month}-${now.day}');
 }
 
